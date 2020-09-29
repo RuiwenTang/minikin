@@ -59,9 +59,14 @@ set(MINIKIN_SOURCES
         libs/minikin/WordBreaker.cpp
         )
 
+set(MINIKIN_LIBS
+        "")
+
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(MINIKIN_HEADERS ${MINIKIN_HEADERS} include/minikin/MinikinFontCoreText.h)
     set(MINIKIN_SOURCES ${MINIKIN_SOURCES} libs/minikin/MinikinFontCoreText.cpp)
+
+    set(MINIKIN_LIBS ${MINIKIN_LIBS} "-framework CoreGraphics")
 endif ()
 
 set(UTILS_HEADERS
@@ -94,3 +99,5 @@ message(${ICU_UC_LIBRARIES})
 add_dependencies(minikin unicode_data)
 
 target_link_libraries(minikin harfbuzz harfbuzz-icu ${ICU_UC_LIBRARIES})
+
+add_subdirectory(sample)

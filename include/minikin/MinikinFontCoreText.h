@@ -13,16 +13,14 @@ namespace minikin {
 class MinikinFontCoreText : public android::MinikinFont {
 public:
     explicit MinikinFontCoreText(CTFontRef ct_font);
-    ~MinikinFontCoreText() override;
+    ~MinikinFontCoreText() noexcept override;
 
     float GetHorizontalAdvance(uint32_t glyph_id,
                                const android::MinikinPaint &paint) const override;
     void GetBounds(android::MinikinRect *bounds, uint32_t glyph_id,
                    const android::MinikinPaint &paint) const override;
     const void *GetTable(uint32_t tag, size_t *size, android::MinikinDestroyFunc *destroy) override;
-    const void *GetFontData() const override;
     size_t GetFontSize() const override;
-    int GetFontIndex() const override;
     bool Render(uint32_t glyph_id, const android::MinikinPaint &paint,
                 android::GlyphBitmap *result) override;
 
