@@ -18,11 +18,12 @@
 #define MINIKIN_LAYOUT_H
 
 #include <hb.h>
+#include <minikin/FontCollection.h>
+#ifdef USE_FT
+#include <minikin/MinikinFontFreeType.h>
+#endif
 
 #include <vector>
-
-#include <minikin/FontCollection.h>
-#include <minikin/MinikinFontFreeType.h>
 
 namespace minikin {
 
@@ -35,6 +36,7 @@ public:
     ~Bitmap();
     void writePnm(std::ofstream& o) const;
     void drawGlyph(const android::GlyphBitmap& bitmap, int x, int y);
+
 private:
     int width;
     int height;
@@ -79,7 +81,6 @@ enum {
 // extend through the lifetime of the Layout object.
 class Layout {
 public:
-
     Layout() : mGlyphs(), mAdvances(), mCollection(0), mFaces(), mAdvance(0), mBounds() {
         mBounds.setEmpty();
     }
@@ -90,12 +91,12 @@ public:
     void dump() const;
     void setFontCollection(const FontCollection* collection);
 
-    void doLayout(const uint16_t* buf, size_t start, size_t count, size_t bufSize,
-        int bidiFlags, const FontStyle &style, const MinikinPaint &paint);
+    void doLayout(const uint16_t* buf, size_t start, size_t count, size_t bufSize, int bidiFlags,
+                  const FontStyle& style, const MinikinPaint& paint);
 
     static float measureText(const uint16_t* buf, size_t start, size_t count, size_t bufSize,
-        int bidiFlags, const FontStyle &style, const MinikinPaint &paint,
-        const FontCollection* collection, float* advances);
+                             int bidiFlags, const FontStyle& style, const MinikinPaint& paint,
+                             const FontCollection* collection, float* advances);
 
     void draw(minikin::Bitmap*, int x0, int y0, float size) const;
 
@@ -105,7 +106,7 @@ public:
     // public accessors
     size_t nGlyphs() const;
     // Does not bump reference; ownership is still layout
-    MinikinFont *getFont(int i) const;
+    MinikinFont* getFont(int i) const;
     FontFakery getFakery(int i) const;
     unsigned int getGlyphId(int i) const;
     float getX(int i) const;
@@ -136,17 +137,18 @@ private:
     // When layout is not null, layout info will be stored in the object.
     // When advances is not null, measurement results will be stored in the array.
     static float doLayoutRunCached(const uint16_t* buf, size_t runStart, size_t runLength,
-        size_t bufSize, bool isRtl, LayoutContext* ctx, size_t dstStart,
-        const FontCollection* collection, Layout* layout, float* advances);
+                                   size_t bufSize, bool isRtl, LayoutContext* ctx, size_t dstStart,
+                                   const FontCollection* collection, Layout* layout,
+                                   float* advances);
 
     // Lay out a single word
     static float doLayoutWord(const uint16_t* buf, size_t start, size_t count, size_t bufSize,
-        bool isRtl, LayoutContext* ctx, size_t bufStart, const FontCollection* collection,
-        Layout* layout, float* advances);
+                              bool isRtl, LayoutContext* ctx, size_t bufStart,
+                              const FontCollection* collection, Layout* layout, float* advances);
 
     // Lay out a single bidi run
-    void doLayoutRun(const uint16_t* buf, size_t start, size_t count, size_t bufSize,
-        bool isRtl, LayoutContext* ctx);
+    void doLayoutRun(const uint16_t* buf, size_t start, size_t count, size_t bufSize, bool isRtl,
+                     LayoutContext* ctx);
 
     // Append another layout (for example, cached value) into this one
     void appendLayout(Layout* src, size_t start);
@@ -160,6 +162,6 @@ private:
     MinikinRect mBounds;
 };
 
-}  // namespace android
+} // namespace android
 
-#endif  // MINIKIN_LAYOUT_H
+#endif // MINIKIN_LAYOUT_H

@@ -17,8 +17,9 @@
 #define LOG_TAG "Minikin"
 
 #include "HbFontCache.h"
-
+#if defined(ANDROID) || defined(__ANDROID__)
 #include <log/log.h>
+#endif
 #include <utils/LruCache.h>
 
 #include <hb.h>

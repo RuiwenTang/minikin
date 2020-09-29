@@ -17,25 +17,34 @@
 #ifndef MINIKIN_FONT_H
 #define MINIKIN_FONT_H
 
-#include <string>
-
-#include <minikin/MinikinRefCounted.h>
 #include <minikin/FontFamily.h>
+#include <minikin/MinikinRefCounted.h>
+
+#include <string>
 
 // An abstraction for platform fonts, allowing Minikin to be used with
 // multiple actual implementations of fonts.
 
 namespace android {
 
+struct GlyphBitmap {
+    uint8_t* buffer;
+    int width;
+    int height;
+    int left;
+    int top;
+};
+
 // The hyphen edit represents an edit to the string when a word is
 // hyphenated. The most common hyphen edit is adding a "-" at the end
 // of a syllable, but nonstandard hyphenation allows for more choices.
 class HyphenEdit {
 public:
-    HyphenEdit() : hyphen(0) { }
-    HyphenEdit(uint32_t hyphenInt) : hyphen(hyphenInt) { }
+    HyphenEdit() : hyphen(0) {}
+    HyphenEdit(uint32_t hyphenInt) : hyphen(hyphenInt) {}
     bool hasHyphen() const { return hyphen != 0; }
-    bool operator==(const HyphenEdit &other) const { return hyphen == other.hyphen; }
+    bool operator==(const HyphenEdit& other) const { return hyphen == other.hyphen; }
+
 private:
     uint32_t hyphen;
 };
@@ -45,14 +54,19 @@ class MinikinFont;
 // Possibly move into own .h file?
 // Note: if you add a field here, either add it to LayoutCacheKey or to skipCache()
 struct MinikinPaint {
-    MinikinPaint() : font(0), size(0), scaleX(0), skewX(0), letterSpacing(0), paintFlags(0),
-            fakery(), fontFeatureSettings() { }
+    MinikinPaint()
+          : font(0),
+            size(0),
+            scaleX(0),
+            skewX(0),
+            letterSpacing(0),
+            paintFlags(0),
+            fakery(),
+            fontFeatureSettings() {}
 
-    bool skipCache() const {
-        return !fontFeatureSettings.empty();
-    }
+    bool skipCache() const { return !fontFeatureSettings.empty(); }
 
-    MinikinFont *font;
+    MinikinFont* font;
     float size;
     float scaleX;
     float skewX;
@@ -71,9 +85,7 @@ enum MinikinPaintFlags {
 
 struct MinikinRect {
     float mLeft, mTop, mRight, mBottom;
-    bool isEmpty() const {
-        return mLeft == mRight || mTop == mBottom;
-    }
+    bool isEmpty() const { return mLeft == mRight || mTop == mBottom; }
     void set(const MinikinRect& r) {
         mLeft = r.mLeft;
         mTop = r.mTop;
@@ -86,16 +98,14 @@ struct MinikinRect {
         mRight += dx;
         mBottom += dy;
     }
-    void setEmpty() {
-        mLeft = mTop = mRight = mBottom = 0;
-    }
+    void setEmpty() { mLeft = mTop = mRight = mBottom = 0; }
     void join(const MinikinRect& r);
 };
 
 class MinikinFontFreeType;
 
 // Callback for freeing data
-typedef void (*MinikinDestroyFunc) (void* data);
+typedef void (*MinikinDestroyFunc)(void* data);
 
 class MinikinFont : public MinikinRefCounted {
 public:
@@ -103,40 +113,35 @@ public:
 
     virtual ~MinikinFont();
 
-    virtual float GetHorizontalAdvance(uint32_t glyph_id,
-        const MinikinPaint &paint) const = 0;
+    virtual float GetHorizontalAdvance(uint32_t glyph_id, const MinikinPaint& paint) const = 0;
 
     virtual void GetBounds(MinikinRect* bounds, uint32_t glyph_id,
-        const MinikinPaint &paint) const = 0;
+                           const MinikinPaint& paint) const = 0;
 
     virtual const void* GetTable(uint32_t tag, size_t* size, MinikinDestroyFunc* destroy) = 0;
 
     // Override if font can provide access to raw data
-    virtual const void* GetFontData() const {
-        return nullptr;
-    }
+    virtual const void* GetFontData() const { return nullptr; }
 
     // Override if font can provide access to raw data
-    virtual size_t GetFontSize() const {
-        return 0;
-    }
+    virtual size_t GetFontSize() const { return 0; }
 
     // Override if font can provide access to raw data.
     // Returns index within OpenType collection
-    virtual int GetFontIndex() const {
-        return 0;
-    }
+    virtual int GetFontIndex() const { return 0; }
 
     static uint32_t MakeTag(char c1, char c2, char c3, char c4) {
-        return ((uint32_t)c1 << 24) | ((uint32_t)c2 << 16) |
-            ((uint32_t)c3 << 8) | (uint32_t)c4;
+        return ((uint32_t)c1 << 24) | ((uint32_t)c2 << 16) | ((uint32_t)c3 << 8) | (uint32_t)c4;
     }
 
     int32_t GetUniqueId() const { return mUniqueId; }
+
+    virtual bool Render(uint32_t glyph_id, const MinikinPaint& paint, GlyphBitmap* result) = 0;
+
 private:
     const int32_t mUniqueId;
 };
 
-}  // namespace android
+} // namespace android
 
-#endif  // MINIKIN_FONT_H
+#endif // MINIKIN_FONT_H

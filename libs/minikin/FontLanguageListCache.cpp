@@ -19,9 +19,12 @@
 #include "FontLanguageListCache.h"
 
 #include <unicode/uloc.h>
+
 #include <unordered_set>
 
+#if defined(ANDROID) || defined(__ANDROID__)
 #include <log/log.h>
+#endif
 
 #include "FontLanguage.h"
 #include "MinikinInternal.h"
@@ -42,14 +45,16 @@ static size_t toLanguageTag(char* output, size_t outSize, const std::string& loc
     outLength = uloc_canonicalize(locale.c_str(), output, outSize, &uErr);
     if (U_FAILURE(uErr)) {
         // unable to build a proper language identifier
+#if defined(ANDROID) || defined(__ANDROID__)
         ALOGD("uloc_canonicalize(\"%s\") failed: %s", locale.c_str(), u_errorName(uErr));
+#endif
         output[0] = '\0';
         return 0;
     }
 
     // Preserve "und" and "und-****" since uloc_addLikelySubtags changes "und" to "en-Latn-US".
     if (strncmp(output, "und", 3) == 0 &&
-        (outLength == 3 || (outLength == 8 && output[3]  == '_'))) {
+        (outLength == 3 || (outLength == 8 && output[3] == '_'))) {
         return outLength;
     }
 
@@ -58,7 +63,9 @@ static size_t toLanguageTag(char* output, size_t outSize, const std::string& loc
     uloc_addLikelySubtags(output, likelyChars, ULOC_FULLNAME_CAPACITY, &uErr);
     if (U_FAILURE(uErr)) {
         // unable to build a proper language identifier
+#if defined(ANDROID) || defined(__ANDROID__)
         ALOGD("uloc_addLikelySubtags(\"%s\") failed: %s", output, u_errorName(uErr));
+#endif
         output[0] = '\0';
         return 0;
     }
@@ -67,7 +74,9 @@ static size_t toLanguageTag(char* output, size_t outSize, const std::string& loc
     outLength = uloc_toLanguageTag(likelyChars, output, outSize, FALSE, &uErr);
     if (U_FAILURE(uErr)) {
         // unable to build a proper language identifier
+#if defined(ANDROID) || defined(__ANDROID__)
         ALOGD("uloc_toLanguageTag(\"%s\") failed: %s", likelyChars, u_errorName(uErr));
+#endif
         output[0] = '\0';
         return 0;
     }
@@ -94,19 +103,19 @@ static std::vector<FontLanguage> parseLanguageList(const std::string& input) {
         if (!lang.isUnsupported() && seen.count(identifier) == 0) {
             result.push_back(lang);
             if (result.size() == FONT_LANGUAGES_LIMIT) {
-              break;
+                break;
             }
             seen.insert(identifier);
         }
     }
     if (result.size() < FONT_LANGUAGES_LIMIT) {
-      locale.assign(input, currentIdx, input.size() - currentIdx);
-      size_t length = toLanguageTag(langTag, ULOC_FULLNAME_CAPACITY, locale);
-      FontLanguage lang(langTag, length);
-      uint64_t identifier = lang.getIdentifier();
-      if (!lang.isUnsupported() && seen.count(identifier) == 0) {
-          result.push_back(lang);
-      }
+        locale.assign(input, currentIdx, input.size() - currentIdx);
+        size_t length = toLanguageTag(langTag, ULOC_FULLNAME_CAPACITY, locale);
+        FontLanguage lang(langTag, length);
+        uint64_t identifier = lang.getIdentifier();
+        if (!lang.isUnsupported() && seen.count(identifier) == 0) {
+            result.push_back(lang);
+        }
     }
     return result;
 }
@@ -134,7 +143,9 @@ uint32_t FontLanguageListCache::getId(const std::string& languages) {
 // static
 const FontLanguages& FontLanguageListCache::getById(uint32_t id) {
     FontLanguageListCache* inst = FontLanguageListCache::getInstance();
+#if defined(ANDROID) || defined(__ANDROID__)
     LOG_ALWAYS_FATAL_IF(id >= inst->mLanguageLists.size(), "Lookup by unknown language list ID.");
+#endif
     return inst->mLanguageLists[id];
 }
 
@@ -153,4 +164,4 @@ FontLanguageListCache* FontLanguageListCache::getInstance() {
     return instance;
 }
 
-}  // namespace android
+} // namespace android

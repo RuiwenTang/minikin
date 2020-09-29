@@ -20,32 +20,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(ANDROID) || defined(__ANDROID__)
 #include <log/log.h>
-#include <utils/JenkinsHash.h>
-
-#include <hb.h>
+#endif
 #include <hb-ot.h>
+#include <hb.h>
+#include <minikin/AnalyzeStyle.h>
+#include <minikin/CmapCoverage.h>
+#include <minikin/FontFamily.h>
+#include <minikin/MinikinFont.h>
+#include <utils/JenkinsHash.h>
 
 #include "FontLanguage.h"
 #include "FontLanguageListCache.h"
 #include "HbFontCache.h"
 #include "MinikinInternal.h"
-#include <minikin/AnalyzeStyle.h>
-#include <minikin/CmapCoverage.h>
-#include <minikin/FontFamily.h>
-#include <minikin/MinikinFont.h>
 
 using std::vector;
 
 namespace android {
 
 FontStyle::FontStyle(int variant, int weight, bool italic)
-        : FontStyle(FontLanguageListCache::kEmptyListId, variant, weight, italic) {
-}
+      : FontStyle(FontLanguageListCache::kEmptyListId, variant, weight, italic) {}
 
 FontStyle::FontStyle(uint32_t languageListId, int variant, int weight, bool italic)
-        : bits(pack(variant, weight, italic)), mLanguageListId(languageListId) {
-}
+      : bits(pack(variant, weight, italic)), mLanguageListId(languageListId) {}
 
 hash_t FontStyle::hash() const {
     uint32_t hash = JenkinsHashMix(0, bits);
@@ -64,11 +63,9 @@ uint32_t FontStyle::pack(int variant, int weight, bool italic) {
     return (weight & kWeightMask) | (italic ? kItalicMask : 0) | (variant << kVariantShift);
 }
 
-FontFamily::FontFamily() : FontFamily(0 /* variant */) {
-}
+FontFamily::FontFamily() : FontFamily(0 /* variant */) {}
 
-FontFamily::FontFamily(int variant) : FontFamily(FontLanguageListCache::kEmptyListId, variant) {
-}
+FontFamily::FontFamily(int variant) : FontFamily(FontLanguageListCache::kEmptyListId, variant) {}
 
 FontFamily::~FontFamily() {
     for (size_t i = 0; i < mFonts.size(); i++) {
@@ -84,12 +81,14 @@ bool FontFamily::addFont(MinikinFont* typeface) {
     int weight;
     bool italic;
     if (analyzeStyle(os2Table.get(), os2Table.size(), &weight, &italic)) {
-        //ALOGD("analyzed weight = %d, italic = %s", weight, italic ? "true" : "false");
+        // ALOGD("analyzed weight = %d, italic = %s", weight, italic ? "true" : "false");
         FontStyle style(weight, italic);
         addFontLocked(typeface, style);
         return true;
     } else {
+#if defined(ANDROID) || defined(__ANDROID__)
         ALOGD("failed to analyze style");
+#endif
     }
     return false;
 }
@@ -175,7 +174,9 @@ const SparseBitSet* FontFamily::getCoverage() {
         const uint32_t cmapTag = MinikinFont::MakeTag('c', 'm', 'a', 'p');
         HbBlob cmapTable(getFontTable(typeface, cmapTag));
         if (cmapTable.get() == nullptr) {
+#if defined(ANDROID) || defined(__ANDROID__)
             ALOGE("Could not get cmap table size!\n");
+#endif
             // Note: This means we will retry on the next call to getCoverage, as we can't store
             //       the failure. This is fine, as we assume this doesn't really happen in practice.
             return nullptr;
@@ -184,7 +185,7 @@ const SparseBitSet* FontFamily::getCoverage() {
         CmapCoverage::getCoverage(mCoverage, cmapTable.get(), cmapTable.size(), &mHasVSTable);
 #ifdef VERBOSE_DEBUG
         ALOGD("font coverage length=%d, first ch=%x\n", mCoverage.length(),
-                mCoverage.nextSetBit(0));
+              mCoverage.nextSetBit(0));
 #endif
         mCoverageValid = true;
     }
@@ -209,8 +210,10 @@ bool FontFamily::hasGlyph(uint32_t codepoint, uint32_t variationSelector) {
 }
 
 bool FontFamily::hasVSTable() const {
+#if defined(ANDROID) || defined(__ANDROID__)
     LOG_ALWAYS_FATAL_IF(!mCoverageValid, "Do not call this method before getCoverage() call");
+#endif
     return mHasVSTable;
 }
 
-}  // namespace android
+} // namespace android

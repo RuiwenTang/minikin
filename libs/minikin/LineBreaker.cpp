@@ -20,7 +20,9 @@
 
 #include <limits>
 
+#if defined(ANDROID) || defined(__ANDROID__)
 #include <log/log.h>
+#endif
 
 #include <minikin/Layout.h>
 #include <minikin/LineBreaker.h>
@@ -84,7 +86,6 @@ void LineBreaker::setLineWidths(float firstWidth, int firstWidthLineCount, float
     mLineWidths.setWidths(firstWidth, firstWidthLineCount, restWidth);
 }
 
-
 void LineBreaker::setIndents(const std::vector<float>& indents) {
     mLineWidths.setIndents(indents);
 }
@@ -121,15 +122,15 @@ static bool isLineBreakingHyphen(uint16_t c) {
 // width buffer.
 // This method finds the candidate word breaks (using the ICU break iterator) and sends them
 // to addCandidate.
-float LineBreaker::addStyleRun(MinikinPaint* paint, const FontCollection* typeface,
-        FontStyle style, size_t start, size_t end, bool isRtl) {
+float LineBreaker::addStyleRun(MinikinPaint* paint, const FontCollection* typeface, FontStyle style,
+                               size_t start, size_t end, bool isRtl) {
     float width = 0.0f;
     int bidiFlags = isRtl ? kBidi_Force_RTL : kBidi_Force_LTR;
 
     float hyphenPenalty = 0.0;
     if (paint != nullptr) {
         width = Layout::measureText(mTextBuf.data(), start, end - start, mTextBuf.size(), bidiFlags,
-                style, *paint, typeface, mCharWidths.data() + start);
+                                    style, *paint, typeface, mCharWidths.data() + start);
 
         // a heuristic that seems to perform well
         hyphenPenalty = 0.5 * paint->size * paint->scaleX * mLineWidths.getLineWidth(0);
@@ -169,10 +170,9 @@ float LineBreaker::addStyleRun(MinikinPaint* paint, const FontCollection* typefa
             size_t wordStart = mWordBreaker.wordStart();
             size_t wordEnd = mWordBreaker.wordEnd();
             if (paint != nullptr && mHyphenator != nullptr &&
-                    mHyphenationFrequency != kHyphenationFrequency_None &&
-                    !wordEndsInHyphen && !temporarilySkipHyphenation &&
-                    wordStart >= start && wordEnd > wordStart &&
-                    wordEnd - wordStart <= LONGEST_HYPHENATED_WORD) {
+                mHyphenationFrequency != kHyphenationFrequency_None && !wordEndsInHyphen &&
+                !temporarilySkipHyphenation && wordStart >= start && wordEnd > wordStart &&
+                wordEnd - wordStart <= LONGEST_HYPHENATED_WORD) {
                 mHyphenator->hyphenate(&mHyphBuf, &mTextBuf[wordStart], wordEnd - wordStart);
 #if VERBOSE_DEBUG
                 std::string hyphenatedString;
@@ -190,15 +190,17 @@ float LineBreaker::addStyleRun(MinikinPaint* paint, const FontCollection* typefa
                     if (hyph) {
                         paint->hyphenEdit = hyph;
 
-                        const float firstPartWidth = Layout::measureText(mTextBuf.data(),
-                                lastBreak, j - lastBreak, mTextBuf.size(), bidiFlags, style,
-                                *paint, typeface, nullptr);
+                        const float firstPartWidth =
+                                Layout::measureText(mTextBuf.data(), lastBreak, j - lastBreak,
+                                                    mTextBuf.size(), bidiFlags, style, *paint,
+                                                    typeface, nullptr);
                         ParaWidth hyphPostBreak = lastBreakWidth + firstPartWidth;
                         paint->hyphenEdit = 0;
 
-                        const float secondPartWith = Layout::measureText(mTextBuf.data(), j,
-                                afterWord - j, mTextBuf.size(), bidiFlags, style, *paint,
-                                typeface, nullptr);
+                        const float secondPartWith =
+                                Layout::measureText(mTextBuf.data(), j, afterWord - j,
+                                                    mTextBuf.size(), bidiFlags, style, *paint,
+                                                    typeface, nullptr);
                         ParaWidth hyphPreBreak = postBreak - secondPartWith;
                         addWordBreak(j, hyphPreBreak, hyphPostBreak, hyphenPenalty, hyph);
                     }
@@ -224,7 +226,7 @@ float LineBreaker::addStyleRun(MinikinPaint* paint, const FontCollection* typefa
 // add a word break (possibly for a hyphenated fragment), and add desperate breaks if
 // needed (ie when word exceeds current line width)
 void LineBreaker::addWordBreak(size_t offset, ParaWidth preBreak, ParaWidth postBreak,
-        float penalty, uint8_t hyph) {
+                               float penalty, uint8_t hyph) {
     Candidate cand;
     ParaWidth width = mCandidates.back().preBreak;
     if (postBreak - width > currentLineWidth()) {
@@ -242,8 +244,8 @@ void LineBreaker::addWordBreak(size_t offset, ParaWidth preBreak, ParaWidth post
                 cand.penalty = SCORE_DESPERATE;
                 cand.hyphenEdit = 0;
 #if VERBOSE_DEBUG
-                ALOGD("desperate cand: %zd %g:%g",
-                        mCandidates.size(), cand.postBreak, cand.preBreak);
+                ALOGD("desperate cand: %zd %g:%g", mCandidates.size(), cand.postBreak,
+                      cand.preBreak);
 #endif
                 addCandidate(cand);
                 width += w;
@@ -272,7 +274,7 @@ void LineBreaker::addCandidate(Candidate cand) {
             mBestBreak = candIndex;
         }
         pushBreak(mCandidates[mBestBreak].offset, mCandidates[mBestBreak].postBreak - mPreBreak,
-                mCandidates[mBestBreak].hyphenEdit);
+                  mCandidates[mBestBreak].hyphenEdit);
         mBestScore = SCORE_INFTY;
 #if VERBOSE_DEBUG
         ALOGD("break: %d %g", mBreaks.back(), mWidths.back());
@@ -442,4 +444,4 @@ void LineBreaker::finish() {
     mLinePenalty = 0.0f;
 }
 
-}  // namespace android
+} // namespace android

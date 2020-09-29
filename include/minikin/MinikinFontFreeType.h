@@ -28,13 +28,7 @@
 
 namespace android {
 
-struct GlyphBitmap {
-    uint8_t *buffer;
-    int width;
-    int height;
-    int left;
-    int top;
-};
+
 
 class MinikinFontFreeType : public MinikinFont {
 public:

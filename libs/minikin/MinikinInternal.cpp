@@ -18,10 +18,13 @@
 #define LOG_TAG "Minikin"
 
 #include "MinikinInternal.h"
+
 #include "HbFontCache.h"
 #include "generated/UnicodeData.h"
 
+#if defined(ANDROID) || defined(__ANDROID)
 #include <log/log.h>
+#endif
 
 namespace android {
 
@@ -54,32 +57,15 @@ bool isEmojiBase(uint32_t c) {
     if (0x261D <= c && c <= 0x270D) {
         return (c == 0x261D || c == 0x26F9 || (0x270A <= c && c <= 0x270D));
     } else if (0x1F385 <= c && c <= 0x1F93E) {
-        return (c == 0x1F385
-                || (0x1F3C3 <= c && c <= 0x1F3C4)
-                || (0x1F3CA <= c && c <= 0x1F3CB)
-                || (0x1F442 <= c && c <= 0x1F443)
-                || (0x1F446 <= c && c <= 0x1F450)
-                || (0x1F466 <= c && c <= 0x1F469)
-                || c == 0x1F46E
-                || (0x1F470 <= c && c <= 0x1F478)
-                || c == 0x1F47C
-                || (0x1F481 <= c && c <= 0x1F483)
-                || (0x1F485 <= c && c <= 0x1F487)
-                || c == 0x1F4AA
-                || c == 0x1F575
-                || c == 0x1F57A
-                || c == 0x1F590
-                || (0x1F595 <= c && c <= 0x1F596)
-                || (0x1F645 <= c && c <= 0x1F647)
-                || (0x1F64B <= c && c <= 0x1F64F)
-                || c == 0x1F6A3
-                || (0x1F6B4 <= c && c <= 0x1F6B6)
-                || c == 0x1F6C0
-                || (0x1F918 <= c && c <= 0x1F91E)
-                || c == 0x1F926
-                || c == 0x1F930
-                || (0x1F933 <= c && c <= 0x1F939)
-                || (0x1F93B <= c && c <= 0x1F93E));
+        return (c == 0x1F385 || (0x1F3C3 <= c && c <= 0x1F3C4) || (0x1F3CA <= c && c <= 0x1F3CB) ||
+                (0x1F442 <= c && c <= 0x1F443) || (0x1F446 <= c && c <= 0x1F450) ||
+                (0x1F466 <= c && c <= 0x1F469) || c == 0x1F46E || (0x1F470 <= c && c <= 0x1F478) ||
+                c == 0x1F47C || (0x1F481 <= c && c <= 0x1F483) || (0x1F485 <= c && c <= 0x1F487) ||
+                c == 0x1F4AA || c == 0x1F575 || c == 0x1F57A || c == 0x1F590 ||
+                (0x1F595 <= c && c <= 0x1F596) || (0x1F645 <= c && c <= 0x1F647) ||
+                (0x1F64B <= c && c <= 0x1F64F) || c == 0x1F6A3 || (0x1F6B4 <= c && c <= 0x1F6B6) ||
+                c == 0x1F6C0 || (0x1F918 <= c && c <= 0x1F91E) || c == 0x1F926 || c == 0x1F930 ||
+                (0x1F933 <= c && c <= 0x1F939) || (0x1F93B <= c && c <= 0x1F93E));
     } else {
         return false;
     }
@@ -94,4 +80,4 @@ hb_blob_t* getFontTable(MinikinFont* minikinFont, uint32_t tag) {
     return blob;
 }
 
-}
+} // namespace android
