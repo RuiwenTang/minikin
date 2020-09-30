@@ -9,6 +9,13 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/usr/local/opt/icu4c/")
 pkg_search_module(ICU_UC icu-uc)
 link_directories(${ICU_UC_LIBRARY_DIRS})
 
+find_package(Freetype)
+
+if (${FREETYPE_FOUND})
+    message("FreeType Found with version ${FREETYPE_VERSION_STRING}")
+    set(HB_HAVE_FREETYPE ON CACHE BOOL "" FORCE)
+endif ()
+
 set(HB_HAVE_ICU ON CACHE BOOL "" FORCE)
 add_subdirectory(third_party/harfbuzz)
 
@@ -16,6 +23,9 @@ add_subdirectory(third_party/harfbuzz)
 include_directories(third_party/harfbuzz/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${ICU_UC_INCLUDE_DIRS})
+if (${FREETYPE_FOUND})
+    include_directories(${FREETYPE_INCLUDE_DIRS})
+endif ()
 
 set(MINIKIN_HEADERS
         include/minikin/AnalyzeStyle.h
@@ -59,8 +69,10 @@ set(MINIKIN_SOURCES
         libs/minikin/WordBreaker.cpp
         )
 
-set(MINIKIN_LIBS
-        "")
+if (${FREETYPE_FOUND})
+    set(MINIKIN_HEADERS ${MINIKIN_HEADERS} include/minikin/MinikinFontFreeType.h)
+    set(MINIKIN_SOURCES ${MINIKIN_SOURCES} libs/minikin/MinikinFontFreeType.cpp)
+endif ()
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(MINIKIN_HEADERS ${MINIKIN_HEADERS} include/minikin/MinikinFontCoreText.h)
@@ -92,12 +104,12 @@ add_library(minikin SHARED ${MINIKIN_HEADERS} ${MINIKIN_SOURCES} ${UTILS_HEADERS
 target_include_directories(minikin PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 
-message(${ICU_UC_LIBRARY_DIRS})
-message(${ICU_UC_LIBRARIES})
-
-
 add_dependencies(minikin unicode_data)
 
-target_link_libraries(minikin harfbuzz harfbuzz-icu ${ICU_UC_LIBRARIES})
+if (${FREETYPE_FOUND})
+    set(MINIKIN_LIBS ${MINIKIN_LIBS} ${FREETYPE_LIBRARIES})
+endif ()
+
+target_link_libraries(minikin harfbuzz harfbuzz-icu ${ICU_UC_LIBRARIES} ${MINIKIN_LIBS})
 
 add_subdirectory(sample)

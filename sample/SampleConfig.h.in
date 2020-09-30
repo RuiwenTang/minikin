@@ -1,0 +1,7 @@
+
+#ifndef SAMPLE_SAMPLE_CONFIG_H_
+#define SAMPLE_SAMPLE_CONFIG_H_
+
+#cmakedefine FONT_DIR "@FONT_DIR@"
+
+#endif

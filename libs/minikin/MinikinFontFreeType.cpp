@@ -16,40 +16,54 @@
 
 // Implementation of MinikinFont abstraction specialized for FreeType
 
-#include <stdint.h>
-
 #include <ft2build.h>
+#include <stdint.h>
 #include FT_FREETYPE_H
 #include FT_TRUETYPE_TABLES_H
 #include FT_ADVANCES_H
-
+#include <freetype/ftglyph.h>
 #include <minikin/MinikinFontFreeType.h>
 
 namespace android {
 
 int32_t MinikinFontFreeType::sIdCounter = 0;
 
-MinikinFontFreeType::MinikinFontFreeType(FT_Face typeface) : 
-    MinikinFont(sIdCounter++),
-    mTypeface(typeface) {
-}
+MinikinFontFreeType::MinikinFontFreeType(FT_Face typeface)
+      : MinikinFont(sIdCounter++), mTypeface(typeface) {}
 
 MinikinFontFreeType::~MinikinFontFreeType() {
     FT_Done_Face(mTypeface);
 }
 
 float MinikinFontFreeType::GetHorizontalAdvance(uint32_t glyph_id,
-    const MinikinPaint &paint) const {
+                                                const MinikinPaint& paint) const {
     FT_Set_Pixel_Sizes(mTypeface, 0, paint.size);
-    FT_UInt32 flags = FT_LOAD_DEFAULT;  // TODO: respect hinting settings
+    FT_UInt32 flags = FT_LOAD_DEFAULT; // TODO: respect hinting settings
     FT_Fixed advance;
     FT_Get_Advance(mTypeface, glyph_id, flags, &advance);
     return advance * (1.0 / 65536);
 }
 
-void MinikinFontFreeType::GetBounds(MinikinRect* /* bounds */, uint32_t /* glyph_id*/,
-        const MinikinPaint& /* paint */) const {
-    // TODO: NYI
+void MinikinFontFreeType::GetBounds(MinikinRect* bounds, uint32_t glyph_id,
+                                    const MinikinPaint& paint) const {
+    FT_Set_Pixel_Sizes(mTypeface, 0, paint.size);
+    FT_Int32 flags = FT_LOAD_BITMAP_METRICS_ONLY;
+    FT_Error error = FT_Load_Glyph(mTypeface, glyph_id, flags);
+    if (error != 0) {
+        return;
+    }
+    FT_Glyph glyph;
+    error = FT_Get_Glyph(mTypeface->glyph, &glyph);
+    if (error != 0) {
+        return;
+    }
+
+    FT_BBox bbox;
+    FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_PIXELS, &bbox);
+    bounds->mLeft = bbox.xMin;
+    bounds->mTop = bbox.yMin;
+    bounds->mBottom = bbox.yMax;
+    bounds->mRight = bbox.xMax;
 }
 
 const void* MinikinFontFreeType::GetTable(uint32_t tag, size_t* size, MinikinDestroyFunc* destroy) {
@@ -73,9 +87,9 @@ const void* MinikinFontFreeType::GetTable(uint32_t tag, size_t* size, MinikinDes
 }
 
 bool MinikinFontFreeType::Render(uint32_t glyph_id, const MinikinPaint& /* paint */,
-        GlyphBitmap *result) {
+                                 GlyphBitmap* result) {
     FT_Error error;
-    FT_Int32 load_flags = FT_LOAD_DEFAULT;  // TODO: respect hinting settings
+    FT_Int32 load_flags = FT_LOAD_DEFAULT; // TODO: respect hinting settings
     error = FT_Load_Glyph(mTypeface, glyph_id, load_flags);
     if (error != 0) {
         return false;
@@ -84,7 +98,7 @@ bool MinikinFontFreeType::Render(uint32_t glyph_id, const MinikinPaint& /* paint
     if (error != 0) {
         return false;
     }
-    FT_Bitmap &bitmap = mTypeface->glyph->bitmap;
+    FT_Bitmap& bitmap = mTypeface->glyph->bitmap;
     result->buffer = bitmap.buffer;
     result->width = bitmap.width;
     result->height = bitmap.rows;
@@ -97,4 +111,4 @@ MinikinFontFreeType* MinikinFontFreeType::GetFreeType() {
     return this;
 }
 
-}  // namespace android
+} // namespace android

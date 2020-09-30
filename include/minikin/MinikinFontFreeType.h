@@ -34,15 +34,15 @@ class MinikinFontFreeType : public MinikinFont {
 public:
     explicit MinikinFontFreeType(FT_Face typeface);
 
-    ~MinikinFontFreeType();
+    ~MinikinFontFreeType() override;
 
     float GetHorizontalAdvance(uint32_t glyph_id,
-        const MinikinPaint &paint) const;
+        const MinikinPaint &paint) const override;
 
     void GetBounds(MinikinRect* bounds, uint32_t glyph_id,
-        const MinikinPaint& paint) const;
+        const MinikinPaint& paint) const override;
 
-    const void* GetTable(uint32_t tag, size_t* size, MinikinDestroyFunc* destroy);
+    const void* GetTable(uint32_t tag, size_t* size, MinikinDestroyFunc* destroy) override;
 
     // TODO: provide access to raw data, as an optimization.
 
@@ -50,7 +50,7 @@ public:
     // glyph bitmaps is probably different depending on the
     // backend.
     bool Render(uint32_t glyph_id,
-        const MinikinPaint &paint, GlyphBitmap *result);
+        const MinikinPaint &paint, GlyphBitmap *result) override;
 
     MinikinFontFreeType* GetFreeType();
 

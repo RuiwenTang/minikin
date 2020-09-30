@@ -13,9 +13,8 @@
 static android::FontCollection* makeFontCollection() {
     auto family = new android::FontFamily;
     std::vector<android::FontFamily*> typefaces;
-    std::vector<std::string> fns{"Roboto-Regular",    "Roboto-Italic",
-                                 "Roboto-BoldItalic", "Roboto-Light",
-                                 "Roboto-Thin",       "Roboto-Bold",
+    std::vector<std::string> fns{"Roboto-Regular",    "Roboto-Italic",     "Roboto-BoldItalic",
+                                 "Roboto-Light",      "Roboto-Thin",       "Roboto-Bold",
                                  "Roboto-ThinItalic", "Roboto-LightItalic"};
 
     for (const auto& name : fns) {
@@ -40,7 +39,7 @@ static android::FontCollection* makeFontCollection() {
 }
 
 int main(int argc, const char** argv) {
-    auto collector = makeFontCollection();
+    const auto collector = makeFontCollection();
 
     android::Layout::init();
 
@@ -58,5 +57,11 @@ int main(int argc, const char** argv) {
                     icu_text.length(), bidi_falgs, font_style, paint);
 
     layout.dump();
+
+    float width =
+            android::Layout::measureText(reinterpret_cast<const uint16_t*>(icu_text.getBuffer()), 0,
+                                         icu_text.length(), icu_text.length(), bidi_falgs,
+                                         font_style, paint, collector, (float*)nullptr);
+    std::cout << "width = " << width << std::endl;
     return 0;
 }

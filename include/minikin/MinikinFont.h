@@ -85,6 +85,7 @@ enum MinikinPaintFlags {
 
 struct MinikinRect {
     float mLeft, mTop, mRight, mBottom;
+    MinikinRect() : mLeft(0), mTop(0), mRight(0), mBottom(0) {}
     bool isEmpty() const { return mLeft == mRight || mTop == mBottom; }
     void set(const MinikinRect& r) {
         mLeft = r.mLeft;
