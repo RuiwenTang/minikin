@@ -8,6 +8,7 @@
 #include <minikin/LineBreaker.h>
 
 #include <climits>
+#include <limits>
 #include <map>
 #include <string>
 #include <vector>

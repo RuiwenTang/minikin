@@ -5,6 +5,7 @@
 #include <txt/FontCollection.h>
 #include <txt/Platform.h>
 
+#include <algorithm>
 #include <sstream>
 
 namespace txt {
@@ -73,14 +74,13 @@ std::shared_ptr<android::FontCollection> FontCollection::GetMinikinFontCollectio
     }
 
     if (enable_font_fallback_) {
-        for(const auto& fallback_family : fallback_fonts_for_locale_[local]) {
+        for (const auto& fallback_family : fallback_fonts_for_locale_[local]) {
             auto it = fallback_fonts_.find(fallback_family);
             if (it != fallback_fonts_.end()) {
                 minikin_families.emplace_back(it->second);
             }
         }
     }
-
 }
 
 } // namespace txt

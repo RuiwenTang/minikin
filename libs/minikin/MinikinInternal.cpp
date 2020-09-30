@@ -19,6 +19,8 @@
 
 #include "MinikinInternal.h"
 
+#include <algorithm>
+
 #include "HbFontCache.h"
 #include "generated/UnicodeData.h"
 

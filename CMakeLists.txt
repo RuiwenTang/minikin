@@ -17,6 +17,11 @@ if (${FREETYPE_FOUND})
 endif ()
 
 set(HB_HAVE_ICU ON CACHE BOOL "" FORCE)
+
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    # Fix compile error
+    set(BUILD_SHARED_LIBS ON)
+endif()
 add_subdirectory(third_party/harfbuzz)
 
 

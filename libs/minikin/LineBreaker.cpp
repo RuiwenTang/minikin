@@ -18,6 +18,8 @@
 
 #define LOG_TAG "Minikin"
 
+#include <algorithm>
+#include <climits>
 #include <limits>
 
 #if defined(ANDROID) || defined(__ANDROID__)
@@ -56,7 +58,7 @@ const size_t LONGEST_HYPHENATED_WORD = 45;
 // to avoid allocation.
 const size_t MAX_TEXT_BUF_RETAIN = 32678;
 
-void LineBreaker::setLocale(const icu::Locale& locale, Hyphenator* hyphenator) {
+void LineBreaker::setLocale(const icu::Locale &locale, Hyphenator *hyphenator) {
     mWordBreaker.setLocale(locale);
 
     mHyphenator = hyphenator;
@@ -86,7 +88,7 @@ void LineBreaker::setLineWidths(float firstWidth, int firstWidthLineCount, float
     mLineWidths.setWidths(firstWidth, firstWidthLineCount, restWidth);
 }
 
-void LineBreaker::setIndents(const std::vector<float>& indents) {
+void LineBreaker::setIndents(const std::vector<float> &indents) {
     mLineWidths.setIndents(indents);
 }
 
@@ -122,7 +124,7 @@ static bool isLineBreakingHyphen(uint16_t c) {
 // width buffer.
 // This method finds the candidate word breaks (using the ICU break iterator) and sends them
 // to addCandidate.
-float LineBreaker::addStyleRun(MinikinPaint* paint, const FontCollection* typeface, FontStyle style,
+float LineBreaker::addStyleRun(MinikinPaint *paint, const FontCollection *typeface, FontStyle style,
                                size_t start, size_t end, bool isRtl) {
     float width = 0.0f;
     int bidiFlags = isRtl ? kBidi_Force_RTL : kBidi_Force_LTR;
