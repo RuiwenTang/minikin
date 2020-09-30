@@ -19,20 +19,27 @@
 #ifndef MINIKIN_REF_COUNTED_H
 #define MINIKIN_REF_COUNTED_H
 
+#include <type_traits>
+
 namespace android {
 
 class MinikinRefCounted {
 public:
     void RefLocked() { mRefcount_++; }
-    void UnrefLocked() { if (--mRefcount_ == 0) { delete this; } }
+    void UnrefLocked() {
+        if (--mRefcount_ == 0) {
+            delete this;
+        }
+    }
 
     // These refcount operations take the global lock.
     void Ref();
     void Unref();
 
-    MinikinRefCounted() : mRefcount_(1) { }
+    MinikinRefCounted() : mRefcount_(1) {}
 
-    virtual ~MinikinRefCounted() { };
+    virtual ~MinikinRefCounted(){};
+
 private:
     int mRefcount_;
 };
@@ -42,18 +49,61 @@ private:
 template <typename T>
 class MinikinAutoUnref {
 public:
-    MinikinAutoUnref(T* obj) : mObj(obj) {
-    }
-    ~MinikinAutoUnref() {
-        mObj->Unref();
-    }
+    explicit MinikinAutoUnref(T* obj) : mObj(obj) {}
+    ~MinikinAutoUnref() { mObj->Unref(); }
     T& operator*() const { return *mObj; }
     T* operator->() const { return mObj; }
     T* get() const { return mObj; }
+
 private:
     T* mObj;
 };
 
-}
+template <class T,
+          typename V =
+                  typename std::enable_if<std::is_base_of<MinikinRefCounted, T>::value, void>::type>
+class MinikinAutoRefUnRef {
+public:
+    explicit MinikinAutoRefUnRef(T* obj) : mObj(obj) {
+        if (obj) obj->Ref();
+    }
+    ~MinikinAutoRefUnRef() {
+        if (mObj) mObj->Unref();
+    }
+    MinikinAutoRefUnRef(const MinikinAutoRefUnRef& other) : mObj(other.mObj) {
+        if (mObj) mObj->Ref();
+    }
+    MinikinAutoRefUnRef& operator=(const MinikinAutoRefUnRef& other) {
+        if (this != &other) {
+            if (mObj) {
+                mObj->Unref();
+            }
+            mObj = other.mObj;
+            if (mObj) mObj->Ref();
+        }
+        return *this;
+    }
 
-#endif   // MINIKIN_REF_COUNTED_H
+    MinikinAutoRefUnRef& operator=(T* obj) {
+        if (obj != mObj) {
+            if (mObj) {
+                mObj->Unref();
+            }
+            mObj = obj;
+            if (mObj) {
+                mObj->Ref();
+            }
+        }
+        return *this;
+    }
+    T& operator*() const { return *mObj; }
+    T* operator->() const { return mObj; }
+    T* get() const { return mObj; }
+
+private:
+    T* mObj;
+};
+
+} // namespace android
+
+#endif // MINIKIN_REF_COUNTED_H

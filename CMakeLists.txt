@@ -41,6 +41,12 @@ set(MINIKIN_HEADERS
         include/minikin/MinikinRefCounted.h
         include/minikin/SparseBitSet.h
         include/minikin/WordBreaker.h
+        include/txt/FontCollection.h
+        include/txt/Paragraph.h
+        include/txt/ParagraphBuilder.h
+        include/txt/ParagraphStyle.h
+        include/txt/PlaceHolderRun.h
+        include/txt/Platform.h
         )
 
 set(MINIKIN_SOURCES
@@ -67,6 +73,8 @@ set(MINIKIN_SOURCES
         libs/minikin/MinikinRefCounted.cpp
         libs/minikin/SparseBitSet.cpp
         libs/minikin/WordBreaker.cpp
+        libs/txt/ParagraphStyle.cpp
+        libs/txt/FontCollection.cpp
         )
 
 if (${FREETYPE_FOUND})
@@ -76,7 +84,10 @@ endif ()
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(MINIKIN_HEADERS ${MINIKIN_HEADERS} include/minikin/MinikinFontCoreText.h)
-    set(MINIKIN_SOURCES ${MINIKIN_SOURCES} libs/minikin/MinikinFontCoreText.cpp)
+    set(MINIKIN_SOURCES ${MINIKIN_SOURCES}
+            libs/minikin/MinikinFontCoreText.cpp
+            libs/txt/platform/PlatformMac.mm
+            )
 
     set(MINIKIN_LIBS ${MINIKIN_LIBS} "-framework CoreGraphics")
 endif ()

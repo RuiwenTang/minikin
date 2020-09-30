@@ -17,11 +17,11 @@
 #ifndef MINIKIN_FONT_COLLECTION_H
 #define MINIKIN_FONT_COLLECTION_H
 
-#include <vector>
-
-#include <minikin/MinikinRefCounted.h>
-#include <minikin/MinikinFont.h>
 #include <minikin/FontFamily.h>
+#include <minikin/MinikinFont.h>
+#include <minikin/MinikinRefCounted.h>
+
+#include <vector>
 
 namespace android {
 
@@ -29,7 +29,7 @@ class FontCollection : public MinikinRefCounted {
 public:
     explicit FontCollection(const std::vector<FontFamily*>& typefaces);
 
-    ~FontCollection();
+    ~FontCollection() override;
 
     struct Run {
         FakedFont fakedFont;
@@ -37,8 +37,8 @@ public:
         int end;
     };
 
-    void itemize(const uint16_t *string, size_t string_length, FontStyle style,
-            std::vector<Run>* result) const;
+    void itemize(const uint16_t* string, size_t string_length, FontStyle style,
+                 std::vector<Run>* result) const;
 
     // Returns true if there is a glyph for the code point and variation selector pair.
     // Returns false if no fonts have a glyph for the code point and variation
@@ -98,6 +98,6 @@ private:
     std::vector<Range> mRanges;
 };
 
-}  // namespace android
+} // namespace android
 
-#endif  // MINIKIN_FONT_COLLECTION_H
+#endif // MINIKIN_FONT_COLLECTION_H

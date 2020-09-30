@@ -15,3 +15,6 @@ if (${FREETYPE_FOUND})
     add_executable(example example.cpp)
     target_link_libraries(example minikin)
 endif ()
+
+add_executable(paragraph_example paragraph_example.cpp)
+target_link_libraries(paragraph_example minikin)
