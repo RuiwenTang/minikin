@@ -81,6 +81,17 @@ FontCollection *makeFontCollection() {
     typefaces.push_back(family);
 #endif
 
+#if 1
+#ifndef ANDROID
+    family = new FontFamily();
+    const char *emoji = FONT_DIR "/NotoColorEmoji.ttf";
+    error = FT_New_Face(library, emoji, 0, &face);
+    MinikinFont *font1 = new MinikinFontFreeType(face);
+    family->addFont(font1);
+    typefaces.push_back(family);
+#endif
+#endif
+
     return new FontCollection(typefaces);
 }
 
