@@ -4,11 +4,15 @@ project(minikin)
 
 set(CMAKE_CXX_STANDARD 14)
 # for icu4c
-find_package(PkgConfig REQUIRED)
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/usr/local/opt/icu4c/")
-pkg_search_module(ICU_UC icu-uc)
-link_directories(${ICU_UC_LIBRARY_DIRS})
-
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    cmake_policy(SET CMP0074 NEW)
+    find_package(ICU REQUIRED uc io)
+else()
+    find_package(PkgConfig REQUIRED)
+    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/usr/local/opt/icu4c/")
+    pkg_search_module(ICU_UC icu-uc)
+    link_directories(${ICU_UC_LIBRARY_DIRS})
+endif()
 find_package(Freetype)
 
 if (${FREETYPE_FOUND})
