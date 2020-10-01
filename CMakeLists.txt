@@ -58,6 +58,7 @@ set(MINIKIN_HEADERS
         include/txt/ParagraphStyle.h
         include/txt/PlaceHolderRun.h
         include/txt/Platform.h
+        include/txt/StyledRuns.h
         )
 
 set(MINIKIN_SOURCES
@@ -86,6 +87,9 @@ set(MINIKIN_SOURCES
         libs/minikin/WordBreaker.cpp
         libs/txt/ParagraphStyle.cpp
         libs/txt/FontCollection.cpp
+        libs/txt/ParagraphBuilder_txt.h
+        libs/txt/ParagraphBuilder_txt.cpp
+        libs/txt/StyledRuns.cpp
         )
 
 if (${FREETYPE_FOUND})

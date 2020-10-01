@@ -45,6 +45,9 @@ public:
     virtual void AddPlaceholder(PlaceholderRun& span) = 0;
 
     virtual std::unique_ptr<Paragraph> Build() = 0;
+
+protected:
+    ParagraphBuilder() = default;
 };
 
 } // namespace txt
