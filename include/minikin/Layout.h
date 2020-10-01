@@ -22,6 +22,9 @@
 #ifdef USE_FT
 #include <minikin/MinikinFontFreeType.h>
 #endif
+#ifdef _MSC_VER
+#include <utils/WindowsUtils.h>
+#endif
 
 #include <vector>
 

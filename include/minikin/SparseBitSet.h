@@ -19,6 +19,9 @@
 
 #include <stdint.h>
 #include <sys/types.h>
+#ifdef _MSC_VER
+#include <utils/WindowsUtils.h>
+#endif
 
 #include <memory>
 

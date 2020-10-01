@@ -23,16 +23,18 @@
 #ifndef MINIKIN_WORD_BREAKER_H
 #define MINIKIN_WORD_BREAKER_H
 
-#include "unicode/brkiter.h"
 #include <memory>
+
+#include "unicode/brkiter.h"
+#ifdef _MSC_VER
+#include <utils/WindowsUtils.h>
+#endif
 
 namespace android {
 
 class WordBreaker {
 public:
-    ~WordBreaker() {
-        finish();
-    }
+    ~WordBreaker() { finish(); }
 
     void setLocale(const icu::Locale& locale);
 
@@ -68,6 +70,6 @@ private:
     bool mInEmailOrUrl;
 };
 
-}  // namespace
+} // namespace android
 
-#endif  // MINIKIN_WORD_BREAKER_H
+#endif // MINIKIN_WORD_BREAKER_H

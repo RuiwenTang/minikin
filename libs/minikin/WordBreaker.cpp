@@ -17,10 +17,10 @@
 #define LOG_TAG "Minikin"
 
 #include <minikin/WordBreaker.h>
-#include "MinikinInternal.h"
-
 #include <unicode/uchar.h>
 #include <unicode/utf16.h>
+
+#include "MinikinInternal.h"
 
 namespace android {
 
@@ -79,7 +79,7 @@ static bool isBreakValid(const uint16_t* buf, size_t bufEnd, size_t i) {
     // around a bug in ICU line breaking: http://bugs.icu-project.org/trac/ticket/12561. To avoid
     // too much looking around in the strings, we simply avoid breaking after any Myanmar virama,
     // where no line break could be imagined, since the Myanmar virama is a pure stacker.
-    if (codePoint == 0x1039) {  // MYANMAR SIGN VIRAMA
+    if (codePoint == 0x1039) { // MYANMAR SIGN VIRAMA
         return false;
     }
 
@@ -123,8 +123,8 @@ static bool breakAfter(uint16_t c) {
 
 // Chicago Manual of Style recommends breaking before these characters in URLs and email addresses
 static bool breakBefore(uint16_t c) {
-    return c == '~' || c == '.' || c == ',' || c == '-' || c == '_' || c == '?' || c == '#'
-            || c == '%' || c == '=' || c == '&';
+    return c == '~' || c == '.' || c == ',' || c == '-' || c == '_' || c == '?' || c == '#' ||
+            c == '%' || c == '=' || c == '&';
 }
 
 ssize_t WordBreaker::next() {
@@ -146,7 +146,7 @@ ssize_t WordBreaker::next() {
                 state = SAW_COLON;
             } else if (state == SAW_COLON || state == SAW_COLON_SLASH) {
                 if (c == '/') {
-                    state = static_cast<ScanState>((int)state + 1);  // next state adds a slash
+                    state = static_cast<ScanState>((int)state + 1); // next state adds a slash
                 } else {
                     state = START;
                 }
@@ -184,7 +184,7 @@ ssize_t WordBreaker::next() {
                 }
                 // break before single slash
                 if (thisChar == '/' && lastChar != '/' &&
-                            !(i + 1 < mScanOffset && mText[i + 1] == '/')) {
+                    !(i + 1 < mScanOffset && mText[i + 1] == '/')) {
                     break;
                 }
             }
@@ -202,8 +202,8 @@ ssize_t WordBreaker::next() {
         } else {
             result = mBreakIterator->next();
         }
-    } while (result != icu::BreakIterator::DONE && (size_t)result != mTextSize
-            && !isBreakValid(mText, mTextSize, result));
+    } while (result != icu::BreakIterator::DONE && (size_t)result != mTextSize &&
+             !isBreakValid(mText, mTextSize, result));
     mCurrent = (ssize_t)result;
     return mCurrent;
 }
@@ -257,4 +257,4 @@ void WordBreaker::finish() {
     utext_close(&mUText);
 }
 
-}  // namespace android
+} // namespace android

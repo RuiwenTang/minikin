@@ -52,7 +52,7 @@ def _create_opt_parser():
 
 def _read_emoji_data(emoji_data_file_path):
   result = []
-  with open(emoji_data_file_path) as emoji_data_file:
+  with open(emoji_data_file_path, encoding='UTF-8') as emoji_data_file:
     for line in emoji_data_file:
       if '#' in line:
         line = line[:line.index('#')]  # Drop comments.
@@ -67,7 +67,7 @@ def _read_emoji_data(emoji_data_file_path):
 
       if '..' in code_points:  # code point range
         cp_start, cp_end = code_points.split('..')
-        result.extend(xrange(int(cp_start, 16), int(cp_end, 16) + 1))
+        result.extend(range(int(cp_start, 16), int(cp_end, 16) + 1))
       else:
         code_point = int(code_points, 16)
         result.append(code_point)

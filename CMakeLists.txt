@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 14)
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     cmake_policy(SET CMP0074 NEW)
     find_package(ICU REQUIRED uc io)
+    include_directories(${ICU_INCLUDE_DIRS})
 else()
     find_package(PkgConfig REQUIRED)
     set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/usr/local/opt/icu4c/")
@@ -128,7 +129,12 @@ add_dependencies(minikin unicode_data)
 
 if (${FREETYPE_FOUND})
     set(MINIKIN_LIBS ${MINIKIN_LIBS} ${FREETYPE_LIBRARIES})
+    add_definitions(-DUSE_TF)
 endif ()
+
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    set(MINIKIN_LIBS ${MINIKIN_LIBS} ${ICU_LIBRARIES})
+endif()
 
 target_link_libraries(minikin harfbuzz harfbuzz-icu ${ICU_UC_LIBRARIES} ${MINIKIN_LIBS})
 
