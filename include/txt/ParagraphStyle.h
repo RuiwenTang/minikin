@@ -168,7 +168,7 @@ public:
     // kBreakStrategy_HighQuality will produce more desirable layouts (e.g., very
     // long words are more likely to be reasonably placed).
     // kBreakStrategy_Balanced will balance between the two.
-    android::BreakStrategy break_strategy = android::BreakStrategy::kBreakStrategy_Greedy;
+    minikin::BreakStrategy break_strategy = minikin::BreakStrategy::kBreakStrategy_Greedy;
 
     ParagraphStyle() = default;
     ~ParagraphStyle() = default;

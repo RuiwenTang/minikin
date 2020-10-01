@@ -22,7 +22,7 @@
 #include <minikin/GraphemeBreak.h>
 #include "MinikinInternal.h"
 
-namespace android {
+namespace minikin {
 
 int32_t tailoredGraphemeClusterBreak(uint32_t c) {
     // Characters defined as Control that we want to treat them as Extend.

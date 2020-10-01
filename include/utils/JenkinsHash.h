@@ -24,7 +24,7 @@
 
 #include <utils/TypeHelpers.h>
 
-namespace android {
+namespace minikin {
 
 /* The Jenkins hash of a sequence of 32 bit words A, B, C is:
  * Whiten(Mix(Mix(Mix(0, A), B), C)) */

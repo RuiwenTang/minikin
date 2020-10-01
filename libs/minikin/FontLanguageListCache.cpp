@@ -29,7 +29,7 @@
 #include "FontLanguage.h"
 #include "MinikinInternal.h"
 
-namespace android {
+namespace minikin {
 
 const uint32_t FontLanguageListCache::kEmptyListId;
 

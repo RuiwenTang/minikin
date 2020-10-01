@@ -24,7 +24,7 @@
 #include <freetype/ftglyph.h>
 #include <minikin/MinikinFontFreeType.h>
 
-namespace android {
+namespace minikin {
 
 int32_t MinikinFontFreeType::sIdCounter = 0;
 

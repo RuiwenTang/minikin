@@ -31,7 +31,7 @@
 
 using std::vector;
 
-namespace android {
+namespace minikin {
 
 const int CHAR_TAB = 0x0009;
 

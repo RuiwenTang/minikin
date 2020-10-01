@@ -38,7 +38,7 @@
 
 using std::vector;
 
-namespace android {
+namespace minikin {
 
 FontStyle::FontStyle(int variant, int weight, bool italic)
       : FontStyle(FontLanguageListCache::kEmptyListId, variant, weight, italic) {}

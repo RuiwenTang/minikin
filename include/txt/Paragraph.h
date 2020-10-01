@@ -67,10 +67,10 @@ public:
     };
 
     struct TextBox {
-        android::MinikinRect rect;
+        minikin::MinikinRect rect;
         TextDirection direction;
 
-        TextBox(const android::MinikinRect& rect, TextDirection direction)
+        TextBox(const minikin::MinikinRect& rect, TextDirection direction)
               : rect(rect), direction(direction) {}
     };
 

@@ -30,7 +30,7 @@
 #include <utils/WindowsUtils.h>
 #endif
 
-namespace android {
+namespace minikin {
 
 class WordBreaker {
 public:

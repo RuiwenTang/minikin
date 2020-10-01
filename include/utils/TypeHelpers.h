@@ -26,7 +26,7 @@
 
 // ---------------------------------------------------------------------------
 
-namespace android {
+namespace minikin {
 
 /*
  * Types traits

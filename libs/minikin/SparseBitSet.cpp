@@ -25,7 +25,7 @@
 
 #include <minikin/SparseBitSet.h>
 
-namespace android {
+namespace minikin {
 
 const uint32_t SparseBitSet::kNotFound;
 

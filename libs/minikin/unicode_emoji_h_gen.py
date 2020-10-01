@@ -27,7 +27,7 @@ UNICODE_EMOJI_TEMPLATE="""
 
 #include <stdint.h>
 
-namespace android {
+namespace minikin {
 namespace generated {
 
 int32_t EMOJI_LIST[] = {

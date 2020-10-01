@@ -22,7 +22,7 @@
 
 #include "MinikinInternal.h"
 
-namespace android {
+namespace minikin {
 
 const uint32_t CHAR_SOFT_HYPHEN = 0x00AD;
 const uint32_t CHAR_ZWJ = 0x200D;

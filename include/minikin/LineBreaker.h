@@ -30,7 +30,7 @@
 #include "minikin/Hyphenator.h"
 #include "minikin/WordBreaker.h"
 
-namespace android {
+namespace minikin {
 
 enum BreakStrategy {
     kBreakStrategy_Greedy = 0,

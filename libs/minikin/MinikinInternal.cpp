@@ -28,7 +28,7 @@
 #include <log/log.h>
 #endif
 
-namespace android {
+namespace minikin {
 
 std::mutex gMinikinLock;
 

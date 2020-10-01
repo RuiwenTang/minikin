@@ -17,7 +17,7 @@
 #include <minikin/MinikinFont.h>
 #include "HbFontCache.h"
 
-namespace android {
+namespace minikin {
 
 MinikinFont::~MinikinFont() {
     purgeHbFontLocked(this);

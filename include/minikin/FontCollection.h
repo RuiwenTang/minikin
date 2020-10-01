@@ -24,7 +24,7 @@
 #include <memory>
 #include <vector>
 
-namespace android {
+namespace minikin {
 
 class FontCollection {
 public:

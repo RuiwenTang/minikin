@@ -16,12 +16,12 @@ class FontCollection final {
 public:
     static std::shared_ptr<FontCollection> GetFontCollection();
 
-    std::shared_ptr<android::FontCollection> GetMinikinFontCollectionForFamilies(
+    std::shared_ptr<minikin::FontCollection> GetMinikinFontCollectionForFamilies(
             const std::vector<std::string>& font_families, const std::string& local);
 
     // Provides a FontFamily that contains glyphs for ch. This caches previously
     // matched fonts. Also see FontCollection::DoMatchFallbackFont.
-    const std::shared_ptr<android::FontFamily>& MatchFallbackFont(uint32_t ch,
+    const std::shared_ptr<minikin::FontFamily>& MatchFallbackFont(uint32_t ch,
                                                                   const std::string& local);
 
     // Do not provide alternative fonts that can match characters which are
@@ -35,10 +35,10 @@ private:
     FontCollection();
     ~FontCollection() = default;
 
-    const std::shared_ptr<android::FontFamily>& DoMatchFallbackFont(uint32_t ch,
+    const std::shared_ptr<minikin::FontFamily>& DoMatchFallbackFont(uint32_t ch,
                                                                     const std::string& locale);
 
-    std::shared_ptr<android::FontFamily> FindFontFamilyInManagers(const std::string& family_name);
+    std::shared_ptr<minikin::FontFamily> FindFontFamilyInManagers(const std::string& family_name);
 
     struct FamilyKey {
         std::string font_families;
@@ -53,13 +53,13 @@ private:
         };
     };
 
-    std::unordered_map<FamilyKey, std::shared_ptr<android::FontCollection>, FamilyKey::Hasher>
+    std::unordered_map<FamilyKey, std::shared_ptr<minikin::FontCollection>, FamilyKey::Hasher>
             font_collections_cache_;
 
     // Cache that stores the results of MatchFallbackFont to ensure lag-free emoji
     // font fallback matching.
-    std::unordered_map<uint32_t, std::shared_ptr<android::FontFamily>> fallback_match_cache_;
-    std::unordered_map<std::string, std::shared_ptr<android::FontFamily>> fallback_fonts_;
+    std::unordered_map<uint32_t, std::shared_ptr<minikin::FontFamily>> fallback_match_cache_;
+    std::unordered_map<std::string, std::shared_ptr<minikin::FontFamily>> fallback_fonts_;
     std::unordered_map<std::string, std::vector<std::string>> fallback_fonts_for_locale_;
     bool enable_font_fallback_;
 };

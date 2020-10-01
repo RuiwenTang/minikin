@@ -19,7 +19,7 @@
 
 struct hb_font_t;
 
-namespace android {
+namespace minikin {
 class MinikinFont;
 
 void purgeHbFontCacheLocked();

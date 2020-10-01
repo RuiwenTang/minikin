@@ -19,7 +19,7 @@
 
 #include <minikin/AnalyzeStyle.h>
 
-namespace android {
+namespace minikin {
 
 // should  we have a single FontAnalyzer class this stuff lives in, to avoid dup?
 static int32_t readU16(const uint8_t* data, size_t offset) {

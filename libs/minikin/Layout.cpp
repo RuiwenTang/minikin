@@ -64,7 +64,7 @@ void Bitmap::writePnm(std::ofstream& o) const {
     o.close();
 }
 
-void Bitmap::drawGlyph(const android::GlyphBitmap& bitmap, int x, int y) {
+void Bitmap::drawGlyph(const minikin::GlyphBitmap& bitmap, int x, int y) {
     int bmw = bitmap.width;
     int bmh = bitmap.height;
     x += bitmap.left;
@@ -88,7 +88,7 @@ void Bitmap::drawGlyph(const android::GlyphBitmap& bitmap, int x, int y) {
 
 } // namespace minikin
 
-namespace android {
+namespace minikin {
 
 const int kDirection_Mask = 0x1;
 

@@ -24,7 +24,7 @@
 #ifndef MINIKIN_HYPHENATOR_H
 #define MINIKIN_HYPHENATOR_H
 
-namespace android {
+namespace minikin {
 
 // hyb file header; implementation details are in the .cpp file
 struct Header;

@@ -24,7 +24,7 @@
 // An abstraction for platform fonts, allowing Minikin to be used with
 // multiple actual implementations of fonts.
 
-namespace android {
+namespace minikin {
 
 struct GlyphBitmap {
     uint8_t* buffer;

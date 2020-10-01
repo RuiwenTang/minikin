@@ -21,7 +21,7 @@
 #include <utils/WindowsUtils.h>
 #endif
 
-namespace android {
+namespace minikin {
 
 class GraphemeBreak {
 public:

@@ -21,7 +21,7 @@
 
 #include <type_traits>
 
-namespace android {
+namespace minikin {
 
  class [[deprecated]] MinikinRefCounted {
 public:

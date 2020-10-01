@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <utils/JenkinsHash.h>
 
-namespace android {
+namespace minikin {
 
 #ifdef __clang__
 __attribute__((no_sanitize("integer")))

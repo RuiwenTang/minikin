@@ -19,7 +19,7 @@
 
 #include <minikin/Layout.h>
 
-namespace android {
+namespace minikin {
 
 float getRunAdvance(const float* advances, const uint16_t* buf, size_t start, size_t count,
         size_t offset);

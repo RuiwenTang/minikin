@@ -28,7 +28,7 @@ using std::vector;
 #include <minikin/SparseBitSet.h>
 #include <minikin/CmapCoverage.h>
 
-namespace android {
+namespace minikin {
 
 // These could perhaps be optimized to use __builtin_bswap16 and friends.
 static uint32_t readU16(const uint8_t* data, size_t offset) {

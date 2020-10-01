@@ -38,7 +38,7 @@ public:
     Bitmap(int width, int height);
     ~Bitmap();
     void writePnm(std::ofstream& o) const;
-    void drawGlyph(const android::GlyphBitmap& bitmap, int x, int y);
+    void drawGlyph(const minikin::GlyphBitmap& bitmap, int x, int y);
 
 private:
     int width;
@@ -48,7 +48,7 @@ private:
 
 } // namespace minikin
 
-namespace android {
+namespace minikin {
 
 struct LayoutGlyph {
     // index into mFaces and mHbFonts vectors. We could imagine

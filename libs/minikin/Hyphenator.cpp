@@ -29,7 +29,7 @@
 
 using std::vector;
 
-namespace android {
+namespace minikin {
 
 static const uint16_t CHAR_SOFT_HYPHEN = 0x00AD;
 

@@ -20,7 +20,7 @@
 
 #include <minikin/MinikinRefCounted.h>
 
-namespace android {
+namespace minikin {
 
 void MinikinRefCounted::Ref() {
     std::lock_guard<std::mutex> _l(gMinikinLock);

@@ -11,7 +11,7 @@
 namespace txt {
 
 namespace {
-const std::shared_ptr<android::FontFamily> g_null_family;
+const std::shared_ptr<minikin::FontFamily> g_null_family;
 }
 
 FontCollection::FamilyKey::FamilyKey(const std::vector<std::string>& families,
@@ -37,7 +37,7 @@ void FontCollection::DisableFontFallback() {
     enable_font_fallback_ = false;
 }
 
-std::shared_ptr<android::FontCollection> FontCollection::GetMinikinFontCollectionForFamilies(
+std::shared_ptr<minikin::FontCollection> FontCollection::GetMinikinFontCollectionForFamilies(
         const std::vector<std::string>& font_families, const std::string& local) {
     FamilyKey family_key{font_families, local};
     auto cached = font_collections_cache_.find(family_key);
@@ -45,7 +45,7 @@ std::shared_ptr<android::FontCollection> FontCollection::GetMinikinFontCollectio
         return cached->second;
     }
 
-    std::vector<std::shared_ptr<android::FontFamily>> minikin_families;
+    std::vector<std::shared_ptr<minikin::FontFamily>> minikin_families;
 
     // search for all user provided font families.
     for (size_t fallback_index = 0; fallback_index < font_families.size(); fallback_index++) {
@@ -82,7 +82,7 @@ std::shared_ptr<android::FontCollection> FontCollection::GetMinikinFontCollectio
         }
     }
     // Create the minikin font collection.
-    auto font_collection = std::make_shared<android::FontCollection>(std::move(minikin_families));
+    auto font_collection = std::make_shared<minikin::FontCollection>(std::move(minikin_families));
     if (enable_font_fallback_) {
         // TODO implement FallbackFontProvider
     }
@@ -93,7 +93,7 @@ std::shared_ptr<android::FontCollection> FontCollection::GetMinikinFontCollectio
     return font_collection;
 }
 
-std::shared_ptr<android::FontFamily> FontCollection::FindFontFamilyInManagers(
+std::shared_ptr<minikin::FontFamily> FontCollection::FindFontFamilyInManagers(
     const std::string& family_name) {
 
     // search for the font family in each font manager.

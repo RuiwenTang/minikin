@@ -27,7 +27,7 @@
 
 // ---------------------------------------------------------------------------
 
-namespace android {
+namespace minikin {
 
 // This is an implementation of a set of integers. It is optimized for
 // values that are somewhat sparse, in the ballpark of a maximum value

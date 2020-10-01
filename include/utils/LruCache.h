@@ -22,7 +22,7 @@
 
 #include "utils/TypeHelpers.h"  // hash_t
 
-namespace android {
+namespace minikin {
 
 /**
  * GenerationCache callback used when an item is removed

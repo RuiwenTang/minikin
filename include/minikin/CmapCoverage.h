@@ -19,7 +19,7 @@
 
 #include <minikin/SparseBitSet.h>
 
-namespace android {
+namespace minikin {
 
 class CmapCoverage {
 public:

@@ -31,7 +31,7 @@
 #include <vector>
 
 using std::vector;
-using namespace android;
+using namespace minikin;
 using namespace minikin;
 
 FT_Library library; // TODO: this should not be a global

@@ -33,7 +33,7 @@
 
 using std::vector;
 
-namespace android {
+namespace minikin {
 
 template <typename T>
 static inline T max(T a, T b) {

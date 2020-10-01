@@ -22,7 +22,7 @@
 #include <minikin/FontFamily.h>
 #include "FontLanguage.h"
 
-namespace android {
+namespace minikin {
 
 class FontLanguageListCache {
 public:

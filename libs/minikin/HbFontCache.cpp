@@ -28,7 +28,7 @@
 #include <minikin/MinikinFont.h>
 #include "MinikinInternal.h"
 
-namespace android {
+namespace minikin {
 
 static hb_blob_t* referenceTable(hb_face_t* /* face */, hb_tag_t tag, void* userData) {
     MinikinFont* font = reinterpret_cast<MinikinFont*>(userData);

@@ -25,7 +25,7 @@
 #include <memory>
 #include <mutex>
 
-namespace android {
+namespace minikin {
 
 // All external Minikin interfaces are designed to be thread-safe.
 // Presently, that's implemented by through a global lock, and having
