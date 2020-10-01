@@ -81,6 +81,24 @@ std::shared_ptr<android::FontCollection> FontCollection::GetMinikinFontCollectio
             }
         }
     }
+    // Create the minikin font collection.
+    auto font_collection = std::make_shared<android::FontCollection>(std::move(minikin_families));
+    if (enable_font_fallback_) {
+        // TODO implement FallbackFontProvider
+    }
+
+    // Cache the font collection for future queries.
+    font_collections_cache_[family_key] = font_collection;
+
+    return font_collection;
+}
+
+std::shared_ptr<android::FontFamily> FontCollection::FindFontFamilyInManagers(
+    const std::string& family_name) {
+
+    // search for the font family in each font manager.
+    // TODO implement FontManager interface
+    return nullptr;
 }
 
 } // namespace txt

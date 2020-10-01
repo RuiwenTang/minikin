@@ -18,7 +18,6 @@
 #define MINIKIN_FONT_H
 
 #include <minikin/FontFamily.h>
-#include <minikin/MinikinRefCounted.h>
 
 #include <string>
 
@@ -108,7 +107,7 @@ class MinikinFontFreeType;
 // Callback for freeing data
 typedef void (*MinikinDestroyFunc)(void* data);
 
-class MinikinFont : public MinikinRefCounted {
+class MinikinFont {
 public:
     MinikinFont(int32_t uniqueId) : mUniqueId(uniqueId) {}
 

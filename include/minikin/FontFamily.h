@@ -17,14 +17,13 @@
 #ifndef MINIKIN_FONT_FAMILY_H
 #define MINIKIN_FONT_FAMILY_H
 
-#include <vector>
-#include <string>
 #include <hb.h>
-
-#include <utils/TypeHelpers.h>
-
 #include <minikin/MinikinRefCounted.h>
 #include <minikin/SparseBitSet.h>
+#include <utils/TypeHelpers.h>
+
+#include <string>
+#include <vector>
 
 namespace android {
 
@@ -38,7 +37,7 @@ public:
     FontStyle() : FontStyle(0 /* variant */, 4 /* weight */, false /* italic */) {}
     FontStyle(int weight, bool italic) : FontStyle(0 /* variant */, weight, italic) {}
     FontStyle(uint32_t langListId)
-            : FontStyle(langListId, 0 /* variant */, 4 /* weight */, false /* italic */) {}
+          : FontStyle(langListId, 0 /* variant */, 4 /* weight */, false /* italic */) {}
 
     FontStyle(int variant, int weight, bool italic);
     FontStyle(uint32_t langListId, int variant, int weight, bool italic);
@@ -49,7 +48,7 @@ public:
     uint32_t getLanguageListId() const { return mLanguageListId; }
 
     bool operator==(const FontStyle other) const {
-          return bits == other.bits && mLanguageListId == other.mLanguageListId;
+        return bits == other.bits && mLanguageListId == other.mLanguageListId;
     }
 
     hash_t hash() const;
@@ -57,6 +56,7 @@ public:
     // Looks up a language list from an internal cache and returns its ID.
     // If the passed language list is not in the cache, registers it and returns newly assigned ID.
     static uint32_t registerLanguageList(const std::string& languages);
+
 private:
     static const uint32_t kWeightMask = (1 << 4) - 1;
     static const uint32_t kItalicMask = 1 << 4;
@@ -75,18 +75,19 @@ enum FontVariant {
     VARIANT_ELEGANT = 2,
 };
 
-inline hash_t hash_type(const FontStyle &style) {
+inline hash_t hash_type(const FontStyle& style) {
     return style.hash();
 }
 
 // attributes representing transforms (fake bold, fake italic) to match styles
 class FontFakery {
 public:
-    FontFakery() : mFakeBold(false), mFakeItalic(false) { }
-    FontFakery(bool fakeBold, bool fakeItalic) : mFakeBold(fakeBold), mFakeItalic(fakeItalic) { }
+    FontFakery() : mFakeBold(false), mFakeItalic(false) {}
+    FontFakery(bool fakeBold, bool fakeItalic) : mFakeBold(fakeBold), mFakeItalic(fakeItalic) {}
     // TODO: want to support graded fake bolding
     bool isFakeBold() { return mFakeBold; }
     bool isFakeItalic() { return mFakeItalic; }
+
 private:
     bool mFakeBold;
     bool mFakeItalic;
@@ -98,33 +99,30 @@ struct FakedFont {
     FontFakery fakery;
 };
 
-class FontFamily : public MinikinRefCounted {
+class FontFamily {
 public:
     FontFamily();
 
     FontFamily(int variant);
 
     FontFamily(uint32_t langId, int variant)
-        : mLangId(langId),
-        mVariant(variant),
-        mHasVSTable(false),
-        mCoverageValid(false) {
-    }
+          : mLangId(langId), mVariant(variant), mHasVSTable(false), mCoverageValid(false) {}
 
     ~FontFamily();
 
     // Add font to family, extracting style information from the font
-    bool addFont(MinikinFont* typeface);
+    bool addFont(const std::shared_ptr<MinikinFont>& typeface);
 
-    void addFont(MinikinFont* typeface, FontStyle style);
+    void addFont(const std::shared_ptr<MinikinFont>& typeface, FontStyle style);
     FakedFont getClosestMatch(FontStyle style) const;
+
 
     uint32_t langId() const { return mLangId; }
     int variant() const { return mVariant; }
 
     // API's for enumerating the fonts in a family. These don't guarantee any particular order
     size_t getNumFonts() const;
-    MinikinFont* getFont(size_t index) const;
+    const std::shared_ptr<MinikinFont>& getFont(size_t index) const;
     FontStyle getStyle(size_t index) const;
     bool isColorEmojiFamily() const;
 
@@ -140,13 +138,13 @@ public:
     bool hasVSTable() const;
 
 private:
-    void addFontLocked(MinikinFont* typeface, FontStyle style);
+    void addFontLocked(const std::shared_ptr<MinikinFont>& typeface, FontStyle style);
 
     class Font {
     public:
-        Font(MinikinFont* typeface, FontStyle style) :
-            typeface(typeface), style(style) { }
-        MinikinFont* typeface;
+        Font(const std::shared_ptr<MinikinFont>& typeface, FontStyle style)
+              : typeface(typeface), style(style) {}
+        std::shared_ptr<MinikinFont> typeface;
         FontStyle style;
     };
     uint32_t mLangId;
@@ -158,6 +156,6 @@ private:
     bool mCoverageValid;
 };
 
-}  // namespace android
+} // namespace android
 
-#endif  // MINIKIN_FONT_FAMILY_H
+#endif // MINIKIN_FONT_FAMILY_H

@@ -23,7 +23,7 @@
 
 namespace android {
 
-class MinikinRefCounted {
+ class [[deprecated]] MinikinRefCounted {
 public:
     void RefLocked() { mRefcount_++; }
     void UnrefLocked() {

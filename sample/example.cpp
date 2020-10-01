@@ -37,7 +37,7 @@ using namespace minikin;
 FT_Library library; // TODO: this should not be a global
 
 FontCollection *makeFontCollection() {
-    vector<FontFamily *> typefaces;
+    vector<std::shared_ptr<FontFamily>> typefaces;
 #ifdef ANDROID
     const char *fns[] = {"/system/fonts/Roboto-Regular.ttf",
                          "/system/fonts/Roboto-Italic.ttf",
@@ -53,7 +53,7 @@ FontCollection *makeFontCollection() {
                          FONT_DIR "/Roboto-Thin.ttf",       FONT_DIR "/Roboto-Bold.ttf",
                          FONT_DIR "/Roboto-ThinItalic.ttf", FONT_DIR "/Roboto-LightItalic.ttf"};
 #endif
-    FontFamily *family = new FontFamily();
+    auto family = std::make_shared<FontFamily>();
     FT_Face face;
     FT_Error error;
     for (size_t i = 0; i < 8; i++) {
@@ -63,30 +63,30 @@ FontCollection *makeFontCollection() {
         if (error != 0) {
             printf("error loading %s, %d\n", fn, error);
         }
-        MinikinFont *font = new MinikinFontFreeType(face);
+        auto font = std::make_shared<MinikinFontFreeType>(face);
         family->addFont(font);
     }
     typefaces.push_back(family);
 
 #if 1
-    family = new FontFamily();
+    family = std::make_shared<FontFamily>();
 #ifdef ANDROID
     const char *fn = "/system/fonts/DroidSansDevanagari-Regular.ttf";
 #else
     const char *fn = FONT_DIR "/DroidSansDevanagari-Regular.ttf";
 #endif
     error = FT_New_Face(library, fn, 0, &face);
-    MinikinFont *font = new MinikinFontFreeType(face);
+    auto font = std::make_shared<MinikinFontFreeType>(face);
     family->addFont(font);
     typefaces.push_back(family);
 #endif
 
 #if 1
 #ifndef ANDROID
-    family = new FontFamily();
+    family = std::make_shared<FontFamily>();
     const char *emoji = FONT_DIR "/NotoColorEmoji.ttf";
     error = FT_New_Face(library, emoji, 0, &face);
-    MinikinFont *font1 = new MinikinFontFreeType(face);
+    auto font1 = std::make_shared<MinikinFontFreeType>(face);
     family->addFont(font1);
     typefaces.push_back(family);
 #endif

@@ -21,15 +21,16 @@
 #include <minikin/MinikinFont.h>
 #include <minikin/MinikinRefCounted.h>
 
+#include <memory>
 #include <vector>
 
 namespace android {
 
-class FontCollection : public MinikinRefCounted {
+class FontCollection {
 public:
-    explicit FontCollection(const std::vector<FontFamily*>& typefaces);
+    explicit FontCollection(const std::vector<std::shared_ptr<FontFamily>>& typefaces);
 
-    ~FontCollection() override;
+    ~FontCollection();
 
     struct Run {
         FakedFont fakedFont;
@@ -62,12 +63,14 @@ private:
         size_t end;
     };
 
-    FontFamily* getFamilyForChar(uint32_t ch, uint32_t vs, uint32_t langListId, int variant) const;
+    const std::shared_ptr<FontFamily>& getFamilyForChar(uint32_t ch, uint32_t vs,
+                                                        uint32_t langListId, int variant) const;
 
     uint32_t calcFamilyScore(uint32_t ch, uint32_t vs, int variant, uint32_t langListId,
-                             FontFamily* fontFamily) const;
+                             const std::shared_ptr<FontFamily>& fontFamily) const;
 
-    uint32_t calcCoverageScore(uint32_t ch, uint32_t vs, FontFamily* fontFamily) const;
+    uint32_t calcCoverageScore(uint32_t ch, uint32_t vs,
+                               const std::shared_ptr<FontFamily>& fontFamily) const;
 
     static uint32_t calcLanguageMatchingScore(uint32_t userLangListId,
                                               const FontFamily& fontFamily);
@@ -85,14 +88,14 @@ private:
 
     // This vector has ownership of the bitsets and typeface objects.
     // This vector can't be empty.
-    std::vector<FontFamily*> mFamilies;
+    std::vector<std::shared_ptr<FontFamily>> mFamilies;
 
     // This vector contains pointers into mInstances
     // This vector can't be empty.
-    std::vector<FontFamily*> mFamilyVec;
+    std::vector<std::shared_ptr<FontFamily>> mFamilyVec;
 
     // This vector has pointers to the font family instance which has cmap 14 subtable.
-    std::vector<FontFamily*> mVSFamilyVec;
+    std::vector<std::shared_ptr<FontFamily>> mVSFamilyVec;
 
     // These are offsets into mInstanceVec, one range per page
     std::vector<Range> mRanges;

@@ -68,15 +68,12 @@ FontFamily::FontFamily() : FontFamily(0 /* variant */) {}
 FontFamily::FontFamily(int variant) : FontFamily(FontLanguageListCache::kEmptyListId, variant) {}
 
 FontFamily::~FontFamily() {
-    for (size_t i = 0; i < mFonts.size(); i++) {
-        mFonts[i].typeface->UnrefLocked();
-    }
 }
 
-bool FontFamily::addFont(MinikinFont* typeface) {
+bool FontFamily::addFont(const std::shared_ptr<MinikinFont>& typeface) {
     std::lock_guard<std::mutex> _l(gMinikinLock);
     const uint32_t os2Tag = MinikinFont::MakeTag('O', 'S', '/', '2');
-    HbBlob os2Table(getFontTable(typeface, os2Tag));
+    HbBlob os2Table(getFontTable(typeface.get(), os2Tag));
     if (os2Table.get() == nullptr) return false;
     int weight;
     bool italic;
@@ -93,13 +90,12 @@ bool FontFamily::addFont(MinikinFont* typeface) {
     return false;
 }
 
-void FontFamily::addFont(MinikinFont* typeface, FontStyle style) {
+void FontFamily::addFont(const std::shared_ptr<MinikinFont>& typeface, FontStyle style) {
     std::lock_guard<std::mutex> _l(gMinikinLock);
     addFontLocked(typeface, style);
 }
 
-void FontFamily::addFontLocked(MinikinFont* typeface, FontStyle style) {
-    typeface->RefLocked();
+void FontFamily::addFontLocked(const std::shared_ptr<MinikinFont>& typeface, FontStyle style) {
     mFonts.push_back(Font(typeface, style));
     mCoverageValid = false;
 }
@@ -139,7 +135,7 @@ FakedFont FontFamily::getClosestMatch(FontStyle style) const {
     if (bestFont == NULL) {
         result.font = NULL;
     } else {
-        result.font = bestFont->typeface;
+        result.font = bestFont->typeface.get();
         result.fakery = computeFakery(style, bestFont->style);
     }
     return result;
@@ -149,7 +145,7 @@ size_t FontFamily::getNumFonts() const {
     return mFonts.size();
 }
 
-MinikinFont* FontFamily::getFont(size_t index) const {
+const std::shared_ptr<MinikinFont>& FontFamily::getFont(size_t index) const {
     return mFonts[index].typeface;
 }
 

@@ -19,11 +19,11 @@
 #ifndef MINIKIN_INTERNAL_H
 #define MINIKIN_INTERNAL_H
 
-#include <mutex>
-
 #include <hb.h>
-
 #include <minikin/MinikinFont.h>
+
+#include <memory>
+#include <mutex>
 
 namespace android {
 
@@ -52,12 +52,9 @@ class HbBlob {
 public:
     // Takes ownership of hb_blob_t object, caller is no longer
     // responsible for calling hb_blob_destroy().
-    HbBlob(hb_blob_t* blob) : mBlob(blob) {
-    }
+    HbBlob(hb_blob_t* blob) : mBlob(blob) {}
 
-    ~HbBlob() {
-        hb_blob_destroy(mBlob);
-    }
+    ~HbBlob() { hb_blob_destroy(mBlob); }
 
     const uint8_t* get() const {
         const char* data = hb_blob_get_data(mBlob, nullptr);
@@ -74,6 +71,6 @@ private:
     hb_blob_t* mBlob;
 };
 
-}
+} // namespace android
 
-#endif  // MINIKIN_INTERNAL_H
+#endif // MINIKIN_INTERNAL_H

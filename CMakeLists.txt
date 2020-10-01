@@ -125,8 +125,12 @@ add_custom_target(unicode_data
         "--input" ${CMAKE_CURRENT_SOURCE_DIR}/libs/minikin/emoji-data.txt "--output" ${UNICODE_DATA}
         )
 
-
-add_library(minikin SHARED ${MINIKIN_HEADERS} ${MINIKIN_SOURCES} ${UTILS_HEADERS} ${UTILS_SOURCES})
+# FIXME to make sample compiled on windows
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    add_library(minikin STATIC ${MINIKIN_HEADERS} ${MINIKIN_SOURCES} ${UTILS_HEADERS} ${UTILS_SOURCES})
+else()
+    add_library(minikin SHARED ${MINIKIN_HEADERS} ${MINIKIN_SOURCES} ${UTILS_HEADERS} ${UTILS_SOURCES})
+endif()
 target_include_directories(minikin PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 
