@@ -35,6 +35,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${ICU_UC_INCLUDE_DIRS})
 if (${FREETYPE_FOUND})
     include_directories(${FREETYPE_INCLUDE_DIRS})
+    add_definitions(-DUSE_FT)
 endif ()
 
 set(MINIKIN_HEADERS
@@ -100,7 +101,11 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
             )
 
     set(MINIKIN_LIBS ${MINIKIN_LIBS} "-framework CoreGraphics")
-endif ()
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    set(MINIKIN_SOURCES ${MINIKIN_SOURCES}
+            libs/txt/platform/PlatformWindows.cpp
+        )
+endif()
 
 set(UTILS_HEADERS
         include/utils/JenkinsHash.h
@@ -129,7 +134,6 @@ add_dependencies(minikin unicode_data)
 
 if (${FREETYPE_FOUND})
     set(MINIKIN_LIBS ${MINIKIN_LIBS} ${FREETYPE_LIBRARIES})
-    add_definitions(-DUSE_TF)
 endif ()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
