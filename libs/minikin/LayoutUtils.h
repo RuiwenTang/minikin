@@ -20,6 +20,17 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+namespace minikin {
+
+const constexpr uint16_t CHAR_NBSP = 0x00A0;
+
+// Determine whether the code unit is a word space for the purposes of justification.
+inline bool isWordSpace(uint16_t code_unit) {
+    return code_unit == ' ' || code_unit == CHAR_NBSP;
+}
+
+
+
 /**
  * Return offset of previous word break. It is either < offset or == 0.
  *
@@ -27,8 +38,7 @@
  * kerning or complex script processing. This is necessarily a
  * heuristic, but should be accurate most of the time.
  */
-size_t getPrevWordBreakForCache(
-        const uint16_t* chars, size_t offset, size_t len);
+size_t getPrevWordBreakForCache(const uint16_t* chars, size_t offset, size_t len);
 
 /**
  * Return offset of next word break. It is either > offset or == len.
@@ -37,7 +47,8 @@ size_t getPrevWordBreakForCache(
  * kerning or complex script processing. This is necessarily a
  * heuristic, but should be accurate most of the time.
  */
-size_t getNextWordBreakForCache(
-        const uint16_t* chars, size_t offset, size_t len);
+size_t getNextWordBreakForCache(const uint16_t* chars, size_t offset, size_t len);
 
-#endif  // MINIKIN_LAYOUT_UTILS_H
+} // namespace minikin
+
+#endif // MINIKIN_LAYOUT_UTILS_H

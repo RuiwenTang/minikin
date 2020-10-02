@@ -90,6 +90,8 @@ set(MINIKIN_SOURCES
         libs/txt/ParagraphBuilder_txt.h
         libs/txt/ParagraphBuilder_txt.cpp
         libs/txt/StyledRuns.cpp
+        libs/txt/ParagraphTxt.h
+        libs/txt/ParagraphTxt.cpp
         )
 
 if (${FREETYPE_FOUND})
