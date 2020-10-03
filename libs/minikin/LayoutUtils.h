@@ -29,8 +29,6 @@ inline bool isWordSpace(uint16_t code_unit) {
     return code_unit == ' ' || code_unit == CHAR_NBSP;
 }
 
-
-
 /**
  * Return offset of previous word break. It is either < offset or == 0.
  *

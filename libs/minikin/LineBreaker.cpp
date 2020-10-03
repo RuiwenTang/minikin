@@ -96,7 +96,7 @@ void LineBreaker::setIndents(const std::vector<float> &indents) {
 // It is the Unicode set: [[:General_Category=Space_Separator:]-[:Line_Break=Glue:]],
 // plus '\n'.
 // Note: all such characters are in the BMP, so it's ok to use code units for this.
-static bool isLineEndSpace(uint16_t c) {
+bool isLineEndSpace(uint16_t c) {
     return c == '\n' || c == ' ' || c == 0x1680 || (0x2000 <= c && c <= 0x200A && c != 0x2007) ||
             c == 0x205F || c == 0x3000;
 }
@@ -140,7 +140,14 @@ float LineBreaker::addStyleRun(MinikinPaint *paint, const FontCollection *typefa
             hyphenPenalty *= 4.0; // TODO: Replace with a better value after some testing
         }
 
-        mLinePenalty = std::max(mLinePenalty, hyphenPenalty * LINE_PENALTY_MULTIPLIER);
+        if (mJustified) {
+            // Make hyphenation more aggressive for fully justified text (so that "normal" in
+            // justified mode is the same as "full" in ragged-right).
+            hyphenPenalty *= 0.25;
+        } else {
+            // Line penalty is zero for justified text.
+            mLinePenalty = std::max(mLinePenalty, hyphenPenalty * LINE_PENALTY_MULTIPLIER);
+        }
     }
 
     size_t current = (size_t)mWordBreaker.current();
@@ -421,6 +428,10 @@ size_t LineBreaker::computeBreaks() {
     return mBreaks.size();
 }
 
+void LineBreaker::setCustomCharWidth(size_t offset, float width) {
+    mCharWidths[offset] = width;
+}
+
 void LineBreaker::finish() {
     mWordBreaker.finish();
     mWidth = 0;
@@ -446,4 +457,4 @@ void LineBreaker::finish() {
     mLinePenalty = 0.0f;
 }
 
-} // namespace android
+} // namespace minikin

@@ -22,13 +22,14 @@
 #ifndef MINIKIN_LINE_BREAKER_H
 #define MINIKIN_LINE_BREAKER_H
 
-#include "unicode/brkiter.h"
-#include "unicode/locid.h"
 #include <cmath>
 #include <vector>
+
 #include "minikin/FontCollection.h"
 #include "minikin/Hyphenator.h"
 #include "minikin/WordBreaker.h"
+#include "unicode/brkiter.h"
+#include "unicode/locid.h"
 
 namespace minikin {
 
@@ -44,206 +45,204 @@ enum HyphenationFrequency {
     kHyphenationFrequency_Full = 2
 };
 
+bool isLineEndSpace(uint16_t c);
+
 // TODO: want to generalize to be able to handle array of line widths
 class LineWidths {
-    public:
-        void setWidths(float firstWidth, int firstWidthLineCount, float restWidth) {
-            mFirstWidth = firstWidth;
-            mFirstWidthLineCount = firstWidthLineCount;
-            mRestWidth = restWidth;
-        }
-        void setIndents(const std::vector<float>& indents) {
-            mIndents = indents;
-        }
-        bool isConstant() const {
-            // technically mFirstWidthLineCount == 0 would count too, but doesn't actually happen
-            return mRestWidth == mFirstWidth && mIndents.empty();
-        }
-        float getLineWidth(int line) const {
-            float width = (line < mFirstWidthLineCount) ? mFirstWidth : mRestWidth;
-            if (!mIndents.empty()) {
-                if ((size_t)line < mIndents.size()) {
-                    width -= mIndents[line];
-                } else {
-                    width -= mIndents.back();
-                }
+public:
+    void setWidths(float firstWidth, int firstWidthLineCount, float restWidth) {
+        mFirstWidth = firstWidth;
+        mFirstWidthLineCount = firstWidthLineCount;
+        mRestWidth = restWidth;
+    }
+    void setIndents(const std::vector<float>& indents) { mIndents = indents; }
+    bool isConstant() const {
+        // technically mFirstWidthLineCount == 0 would count too, but doesn't actually happen
+        return mRestWidth == mFirstWidth && mIndents.empty();
+    }
+    float getLineWidth(int line) const {
+        float width = (line < mFirstWidthLineCount) ? mFirstWidth : mRestWidth;
+        if (!mIndents.empty()) {
+            if ((size_t)line < mIndents.size()) {
+                width -= mIndents[line];
+            } else {
+                width -= mIndents.back();
             }
-            return width;
         }
-        void clear() {
-            mIndents.clear();
-        }
-    private:
-        float mFirstWidth;
-        int mFirstWidthLineCount;
-        float mRestWidth;
-        std::vector<float> mIndents;
+        return width;
+    }
+    void clear() { mIndents.clear(); }
+
+private:
+    float mFirstWidth;
+    int mFirstWidthLineCount;
+    float mRestWidth;
+    std::vector<float> mIndents;
 };
 
 class TabStops {
-    public:
-        void set(const int* stops, size_t nStops, int tabWidth) {
-            if (stops != nullptr) {
-                mStops.assign(stops, stops + nStops);
-            } else {
-                mStops.clear();
-            }
-            mTabWidth = tabWidth;
+public:
+    void set(const int* stops, size_t nStops, int tabWidth) {
+        if (stops != nullptr) {
+            mStops.assign(stops, stops + nStops);
+        } else {
+            mStops.clear();
         }
-        float nextTab(float widthSoFar) const {
-            for (size_t i = 0; i < mStops.size(); i++) {
-                if (mStops[i] > widthSoFar) {
-                    return mStops[i];
-                }
+        mTabWidth = tabWidth;
+    }
+    float nextTab(float widthSoFar) const {
+        for (size_t i = 0; i < mStops.size(); i++) {
+            if (mStops[i] > widthSoFar) {
+                return mStops[i];
             }
-            return floor(widthSoFar / mTabWidth + 1) * mTabWidth;
         }
-    private:
-        std::vector<int> mStops;
-        int mTabWidth;
+        return floor(widthSoFar / mTabWidth + 1) * mTabWidth;
+    }
+
+private:
+    std::vector<int> mStops;
+    int mTabWidth;
 };
 
 class LineBreaker {
-    public:
-        const static int kTab_Shift = 29;  // keep synchronized with TAB_MASK in StaticLayout.java
+public:
+    const static int kTab_Shift = 29; // keep synchronized with TAB_MASK in StaticLayout.java
 
-        // Note: Locale persists across multiple invocations (it is not cleaned up by finish()),
-        // explicitly to avoid the cost of creating ICU BreakIterator objects. It should always
-        // be set on the first invocation, but callers are encouraged not to call again unless
-        // locale has actually changed.
-        // That logic could be here but it's better for performance that it's upstream because of
-        // the cost of constructing and comparing the ICU Locale object.
-        // Note: caller is responsible for managing lifetime of hyphenator
-        void setLocale(const icu::Locale& locale, Hyphenator* hyphenator);
+    // Note: Locale persists across multiple invocations (it is not cleaned up by finish()),
+    // explicitly to avoid the cost of creating ICU BreakIterator objects. It should always
+    // be set on the first invocation, but callers are encouraged not to call again unless
+    // locale has actually changed.
+    // That logic could be here but it's better for performance that it's upstream because of
+    // the cost of constructing and comparing the ICU Locale object.
+    // Note: caller is responsible for managing lifetime of hyphenator
+    void setLocale(const icu::Locale& locale, Hyphenator* hyphenator);
 
-        void resize(size_t size) {
-            mTextBuf.resize(size);
-            mCharWidths.resize(size);
-        }
+    void resize(size_t size) {
+        mTextBuf.resize(size);
+        mCharWidths.resize(size);
+    }
 
-        size_t size() const {
-            return mTextBuf.size();
-        }
+    size_t size() const { return mTextBuf.size(); }
 
-        uint16_t* buffer() {
-            return mTextBuf.data();
-        }
+    uint16_t* buffer() { return mTextBuf.data(); }
 
-        float* charWidths() {
-            return mCharWidths.data();
-        }
+    float* charWidths() { return mCharWidths.data(); }
 
-        // set text to current contents of buffer
-        void setText();
+    // set text to current contents of buffer
+    void setText();
 
-        void setLineWidths(float firstWidth, int firstWidthLineCount, float restWidth);
+    void setLineWidths(float firstWidth, int firstWidthLineCount, float restWidth);
 
-        void setIndents(const std::vector<float>& indents);
+    void setIndents(const std::vector<float>& indents);
 
-        void setTabStops(const int* stops, size_t nStops, int tabWidth) {
-            mTabStops.set(stops, nStops, tabWidth);
-        }
+    void setTabStops(const int* stops, size_t nStops, int tabWidth) {
+        mTabStops.set(stops, nStops, tabWidth);
+    }
 
-        BreakStrategy getStrategy() const { return mStrategy; }
+    BreakStrategy getStrategy() const { return mStrategy; }
 
-        void setStrategy(BreakStrategy strategy) { mStrategy = strategy; }
+    void setStrategy(BreakStrategy strategy) { mStrategy = strategy; }
 
-        HyphenationFrequency getHyphenationFrequency() const { return mHyphenationFrequency; }
+    void setJustified(bool justified) { mJustified = justified; }
 
-        void setHyphenationFrequency(HyphenationFrequency frequency) {
-            mHyphenationFrequency = frequency;
-        }
+    HyphenationFrequency getHyphenationFrequency() const { return mHyphenationFrequency; }
 
-        // TODO: this class is actually fairly close to being general and not tied to using
-        // Minikin to do the shaping of the strings. The main thing that would need to be changed
-        // is having some kind of callback (or virtual class, or maybe even template), which could
-        // easily be instantiated with Minikin's Layout. Future work for when needed.
-        float addStyleRun(MinikinPaint* paint, const FontCollection* typeface, FontStyle style,
-                size_t start, size_t end, bool isRtl);
+    void setHyphenationFrequency(HyphenationFrequency frequency) {
+        mHyphenationFrequency = frequency;
+    }
 
-        void addReplacement(size_t start, size_t end, float width);
+    // TODO: this class is actually fairly close to being general and not tied to using
+    // Minikin to do the shaping of the strings. The main thing that would need to be changed
+    // is having some kind of callback (or virtual class, or maybe even template), which could
+    // easily be instantiated with Minikin's Layout. Future work for when needed.
+    float addStyleRun(MinikinPaint* paint, const FontCollection* typeface, FontStyle style,
+                      size_t start, size_t end, bool isRtl);
 
-        size_t computeBreaks();
+    void addReplacement(size_t start, size_t end, float width);
 
-        const int* getBreaks() const {
-            return mBreaks.data();
-        }
+    size_t computeBreaks();
 
-        const float* getWidths() const {
-            return mWidths.data();
-        }
+    // libtxt: Add ability to set custom char widths. This allows manual
+    // definition of the widths of arbitrary glyphs. To linebreak properly, call
+    // addStyleRun with nullptr as the paint property, which will lead it to
+    // assume the width has already been calculated. Used for properly breaking
+    // inline placeholders.
+    void setCustomCharWidth(size_t offset, float width);
 
-        const int* getFlags() const {
-            return mFlags.data();
-        }
+    const int* getBreaks() const { return mBreaks.data(); }
 
-        void finish();
+    const float* getWidths() const { return mWidths.data(); }
 
-    private:
-        // ParaWidth is used to hold cumulative width from beginning of paragraph. Note that for
-        // very large paragraphs, accuracy could degrade using only 32-bit float. Note however
-        // that float is used extensively on the Java side for this. This is a typedef so that
-        // we can easily change it based on performance/accuracy tradeoff.
-        typedef double ParaWidth;
+    const int* getFlags() const { return mFlags.data(); }
 
-        // A single candidate break
-        struct Candidate {
-            size_t offset;  // offset to text buffer, in code units
-            size_t prev;  // index to previous break
-            ParaWidth preBreak;
-            ParaWidth postBreak;
-            float penalty;  // penalty of this break (for example, hyphen penalty)
-            float score;  // best score found for this break
-            size_t lineNumber;  // only updated for non-constant line widths
-            uint8_t hyphenEdit;
-        };
+    void finish();
 
-        float currentLineWidth() const;
+private:
+    // ParaWidth is used to hold cumulative width from beginning of paragraph. Note that for
+    // very large paragraphs, accuracy could degrade using only 32-bit float. Note however
+    // that float is used extensively on the Java side for this. This is a typedef so that
+    // we can easily change it based on performance/accuracy tradeoff.
+    typedef double ParaWidth;
 
-        void addWordBreak(size_t offset, ParaWidth preBreak, ParaWidth postBreak, float penalty,
-                uint8_t hyph);
+    // A single candidate break
+    struct Candidate {
+        size_t offset; // offset to text buffer, in code units
+        size_t prev;   // index to previous break
+        ParaWidth preBreak;
+        ParaWidth postBreak;
+        float penalty;     // penalty of this break (for example, hyphen penalty)
+        float score;       // best score found for this break
+        size_t lineNumber; // only updated for non-constant line widths
+        uint8_t hyphenEdit;
+    };
 
-        void addCandidate(Candidate cand);
+    float currentLineWidth() const;
 
-        // push an actual break to the output. Takes care of setting flags for tab
-        void pushBreak(int offset, float width, uint8_t hyph);
+    void addWordBreak(size_t offset, ParaWidth preBreak, ParaWidth postBreak, float penalty,
+                      uint8_t hyph);
 
-        void computeBreaksGreedy();
+    void addCandidate(Candidate cand);
 
-        void computeBreaksOptimal(bool isRectangular);
+    // push an actual break to the output. Takes care of setting flags for tab
+    void pushBreak(int offset, float width, uint8_t hyph);
 
-        void finishBreaksOptimal();
+    void computeBreaksGreedy();
 
-        WordBreaker mWordBreaker;
-        std::vector<uint16_t>mTextBuf;
-        std::vector<float>mCharWidths;
+    void computeBreaksOptimal(bool isRectangular);
 
-        Hyphenator* mHyphenator;
-        std::vector<uint8_t> mHyphBuf;
+    void finishBreaksOptimal();
 
-        // layout parameters
-        BreakStrategy mStrategy = kBreakStrategy_Greedy;
-        HyphenationFrequency mHyphenationFrequency = kHyphenationFrequency_Normal;
-        LineWidths mLineWidths;
-        TabStops mTabStops;
+    WordBreaker mWordBreaker;
+    std::vector<uint16_t> mTextBuf;
+    std::vector<float> mCharWidths;
 
-        // result of line breaking
-        std::vector<int> mBreaks;
-        std::vector<float> mWidths;
-        std::vector<int> mFlags;
+    Hyphenator* mHyphenator;
+    std::vector<uint8_t> mHyphBuf;
 
-        ParaWidth mWidth = 0;
-        std::vector<Candidate> mCandidates;
-        float mLinePenalty = 0.0f;
+    // layout parameters
+    BreakStrategy mStrategy = kBreakStrategy_Greedy;
+    HyphenationFrequency mHyphenationFrequency = kHyphenationFrequency_Normal;
+    LineWidths mLineWidths;
+    TabStops mTabStops;
+    bool mJustified = false;
 
-        // the following are state for greedy breaker (updated while adding style runs)
-        size_t mLastBreak;
-        size_t mBestBreak;
-        float mBestScore;
-        ParaWidth mPreBreak;  // prebreak of last break
-        int mFirstTabIndex;
+    // result of line breaking
+    std::vector<int> mBreaks;
+    std::vector<float> mWidths;
+    std::vector<int> mFlags;
+
+    ParaWidth mWidth = 0;
+    std::vector<Candidate> mCandidates;
+    float mLinePenalty = 0.0f;
+
+    // the following are state for greedy breaker (updated while adding style runs)
+    size_t mLastBreak;
+    size_t mBestBreak;
+    float mBestScore;
+    ParaWidth mPreBreak; // prebreak of last break
+    int mFirstTabIndex;
 };
 
-}  // namespace android
+} // namespace minikin
 
-#endif  // MINIKIN_LINE_BREAKER_H
+#endif // MINIKIN_LINE_BREAKER_H
