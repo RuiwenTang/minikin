@@ -592,6 +592,21 @@ void Layout::doLayout(const uint16_t* buf, size_t start, size_t count, size_t bu
     ctx.clearHbFonts();
 }
 
+void Layout::doLayout(const uint16_t* buf, size_t start, size_t count, size_t bufSize, bool isRtl,
+                      const FontStyle& style, const MinikinPaint& paint,
+                      const std::shared_ptr<FontCollection>& collection) {
+    std::lock_guard<std::mutex> _l{gMinikinLock};
+    LayoutContext ctx;
+    ctx.style = style;
+    ctx.paint = paint;
+    reset();
+    mAdvances.resize(count, 0);
+
+    doLayoutRunCached(buf, start, count, bufSize, isRtl, std::addressof(ctx), start,
+                      collection.get(), this, nullptr);
+    ctx.clearHbFonts();
+}
+
 float Layout::measureText(const uint16_t* buf, size_t start, size_t count, size_t bufSize,
                           int bidiFlags, const FontStyle& style, const MinikinPaint& paint,
                           const FontCollection* collection, float* advances) {
@@ -969,4 +984,4 @@ void Layout::purgeCaches() {
     purgeHbFontCacheLocked();
 }
 
-} // namespace android
+} // namespace minikin

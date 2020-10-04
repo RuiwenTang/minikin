@@ -63,7 +63,7 @@ private:
         size_t end;
     };
 
-    const std::shared_ptr<FontFamily>& getFamilyForChar(uint32_t ch, uint32_t vs,
+    std::shared_ptr<FontFamily> getFamilyForChar(uint32_t ch, uint32_t vs,
                                                         uint32_t langListId, int variant) const;
 
     uint32_t calcFamilyScore(uint32_t ch, uint32_t vs, int variant, uint32_t langListId,

@@ -5,6 +5,8 @@
 #ifndef MINIKIN_INCLUDE_TXT_PLACEHOLDERRUN_H_
 #define MINIKIN_INCLUDE_TXT_PLACEHOLDERRUN_H_
 
+#include <txt/ParagraphStyle.h>
+
 namespace txt {
 
 /// Where to vertically align the placeholder relative to the surrounding text.
@@ -49,6 +51,8 @@ public:
 
     PlaceholderAlignment alignment = PlaceholderAlignment::kMiddle;
 
+    TextBaseline baseline;
+
     // Distance from the top edge of the rect to the baseline position. This
     // baseline will be aligned against the alphabetic baseline of the surrounding
     // text.
@@ -62,8 +66,12 @@ public:
     PlaceholderRun() = default;
 
     PlaceholderRun(double width, double height, PlaceholderAlignment alignment,
-                   double baseline_offset)
-          : width{width}, height{height}, alignment{alignment}, baseline_offset{baseline_offset} {}
+                   TextBaseline baseline, double baseline_offset)
+          : width{width},
+            height{height},
+            alignment{alignment},
+            baseline{baseline},
+            baseline_offset{baseline_offset} {}
 };
 
 } // namespace txt

@@ -41,6 +41,11 @@ enum class TextAlign {
     kEnd,
 };
 
+enum class TextBaseline {
+    kAlphabetic,
+    kIdeographic,
+};
+
 enum class TextDirection {
     kRtl,
     kLtr,
@@ -156,6 +161,8 @@ public:
     double strut_font_size = 14;
     double strut_height = 1;
     bool strut_has_height_override = false;
+    double strut_leading = -1; // Negative to use font's default leading.
+    bool force_strut_height = false;
 
     TextAlign text_align = TextAlign::kStart;
     TextDirection text_direction = TextDirection::kLtr;
@@ -175,7 +182,6 @@ public:
 
     TextStyle GetTextStyle() const;
 
-private:
     bool unlimited_lines() const;
     bool ellipsized() const;
     TextAlign effective_align() const;

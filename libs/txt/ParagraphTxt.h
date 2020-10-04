@@ -141,6 +141,15 @@ private:
                 is_ghost_(false),
                 placeholder_run_(std::addressof(placeholder)) {}
 
+        BidiRun(size_t start, size_t end, TextDirection direction, const TextStyle& style,
+                bool is_ghost)
+              : start_(start),
+                end_(end),
+                direction_(direction),
+                style_(std::addressof(style)),
+                is_ghost_(is_ghost),
+                placeholder_run_(nullptr) {}
+
         size_t Start() const { return start_; }
         size_t End() const { return end_; }
         size_t Size() const { return end_ - start_; }
@@ -248,6 +257,7 @@ private:
     // TODO implement
     // Calculates and populates strut based on paragraph_style_ strut info.
     // void ComputeStrut(StrutMetrics* strut, SkFont& font);
+    void ComputeStruct(StrutMetrics* strut, minikin::MinikinFont* font);
 
     // Adjusts the ascent and descent based on the existence and type of
     // placeholder. This method sets the proper metrics to achieve the different

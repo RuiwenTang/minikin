@@ -85,6 +85,8 @@ enum MinikinPaintFlags {
 struct MinikinRect {
     float mLeft, mTop, mRight, mBottom;
     MinikinRect() : mLeft(0), mTop(0), mRight(0), mBottom(0) {}
+    MinikinRect(float left, float top, float right, float bottom)
+          : mLeft(left), mTop(top), mRight(right), mBottom(bottom) {}
     bool isEmpty() const { return mLeft == mRight || mTop == mBottom; }
     void set(const MinikinRect& r) {
         mLeft = r.mLeft;
@@ -130,6 +132,9 @@ public:
     // Returns index within OpenType collection
     virtual int GetFontIndex() const { return 0; }
 
+    // Override if font can provide FamilyNames
+    virtual std::string GetFamilyName() { return ""; }
+
     static uint32_t MakeTag(char c1, char c2, char c3, char c4) {
         return ((uint32_t)c1 << 24) | ((uint32_t)c2 << 16) | ((uint32_t)c3 << 8) | (uint32_t)c4;
     }
@@ -142,6 +147,6 @@ private:
     const int32_t mUniqueId;
 };
 
-} // namespace android
+} // namespace minikin
 
 #endif // MINIKIN_FONT_H

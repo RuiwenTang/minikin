@@ -97,6 +97,10 @@ public:
     void doLayout(const uint16_t* buf, size_t start, size_t count, size_t bufSize, int bidiFlags,
                   const FontStyle& style, const MinikinPaint& paint);
 
+    void doLayout(const uint16_t* buf, size_t start, size_t count, size_t bufSize, bool isRtl,
+                  const FontStyle& style, const MinikinPaint& paint,
+                  const std::shared_ptr<FontCollection>& collection);
+
     static float measureText(const uint16_t* buf, size_t start, size_t count, size_t bufSize,
                              int bidiFlags, const FontStyle& style, const MinikinPaint& paint,
                              const FontCollection* collection, float* advances);
@@ -165,6 +169,6 @@ private:
     MinikinRect mBounds;
 };
 
-} // namespace android
+} // namespace minikin
 
 #endif // MINIKIN_LAYOUT_H

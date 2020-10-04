@@ -274,7 +274,7 @@ uint32_t FontCollection::calcVariantMatchingScore(int variant, const FontFamily&
 // 2. Calculate a score for the font family. See comments in calcFamilyScore for the detail.
 // 3. Highest score wins, with ties resolved to the first font.
 // This method never returns nullptr.
-const std::shared_ptr<FontFamily>& FontCollection::getFamilyForChar(uint32_t ch, uint32_t vs,
+std::shared_ptr<FontFamily> FontCollection::getFamilyForChar(uint32_t ch, uint32_t vs,
                                                                     uint32_t langListId,
                                                                     int variant) const {
     if (ch >= mMaxChar) {
@@ -305,7 +305,7 @@ const std::shared_ptr<FontFamily>& FontCollection::getFamilyForChar(uint32_t ch,
     std::shared_ptr<FontFamily> bestFamily = nullptr;
     uint32_t bestScore = kUnsupportedFontScore;
     for (size_t i = range.start; i < range.end; i++) {
-        auto family = (*familyVec)[i];
+        const std::shared_ptr<FontFamily>& family = (*familyVec)[i];
         const uint32_t score = calcFamilyScore(ch, vs, variant, langListId, family);
         if (score == kFirstFontScore) {
             // If the first font family supports the given character or variation sequence, always
@@ -480,4 +480,4 @@ uint32_t FontCollection::getId() const {
     return mId;
 }
 
-} // namespace android
+} // namespace minikin
