@@ -10,19 +10,19 @@
 
 namespace minikin {
 
-class MinikinFontCoreText : public android::MinikinFont {
+class MinikinFontCoreText : public minikin::MinikinFont {
 public:
     explicit MinikinFontCoreText(CTFontRef ct_font);
     ~MinikinFontCoreText() noexcept override;
 
     float GetHorizontalAdvance(uint32_t glyph_id,
-                               const android::MinikinPaint &paint) const override;
-    void GetBounds(android::MinikinRect *bounds, uint32_t glyph_id,
-                   const android::MinikinPaint &paint) const override;
-    const void *GetTable(uint32_t tag, size_t *size, android::MinikinDestroyFunc *destroy) override;
+                               const minikin::MinikinPaint &paint) const override;
+    void GetBounds(minikin::MinikinRect *bounds, uint32_t glyph_id,
+                   const minikin::MinikinPaint &paint) const override;
+    const void *GetTable(uint32_t tag, size_t *size, minikin::MinikinDestroyFunc *destroy) override;
     size_t GetFontSize() const override;
-    bool Render(uint32_t glyph_id, const android::MinikinPaint &paint,
-                android::GlyphBitmap *result) override;
+    bool Render(uint32_t glyph_id, const minikin::MinikinPaint &paint,
+                minikin::GlyphBitmap *result) override;
 
 private:
     static uint64_t sIdCounter;

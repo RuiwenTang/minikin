@@ -1165,4 +1165,143 @@ std::vector<Paragraph::TextBox> ParagraphTxt::GetRectsForRange(size_t start, siz
     return boxes;
 }
 
+Paragraph::PositionWithAffinity ParagraphTxt::GetGlyphPositionAtCoordinate(double dx, double dy) {
+    if (final_line_count_ <= 0) {
+        return {0, DOWNSTREAM};
+    }
+
+    size_t y_index;
+    for (y_index = 0; y_index < final_line_count_ - 1; ++y_index) {
+        if (dy < line_metrics_[y_index].height) break;
+    }
+
+    const std::vector<GlyphPosition>& line_glyph_position = glyph_lines_[y_index].positions;
+    if (line_glyph_position.empty()) {
+        int line_start_index = std::accumulate(glyph_lines_.begin(), glyph_lines_.begin() + y_index,
+                                               0, [](const int a, const GlyphLine& b) {
+                                                   return a + static_cast<int>(b.total_code_units);
+                                               });
+        return {static_cast<size_t>(line_start_index), DOWNSTREAM};
+    }
+
+    size_t x_index;
+    const GlyphPosition* gp = nullptr;
+    const GlyphPosition* gp_cluster = nullptr;
+    bool is_cluster_corection = false;
+    for (x_index = 0; x_index < line_glyph_position.size(); ++x_index) {
+        double glyph_end = (x_index < line_glyph_position.size() - 1)
+                ? line_glyph_position[x_index + 1].x_pos.start
+                : line_glyph_position[x_index].x_pos.end;
+        if (gp_cluster == nullptr || gp_cluster->cluster != line_glyph_position[x_index].cluster) {
+            gp_cluster = &line_glyph_position[x_index];
+        }
+        if (dx < glyph_end) {
+            // Check if the glyph position is part of a cluster. If it is,
+            // we assign the cluster's root GlyphPosition to represent it.
+            if (gp_cluster->cluster == line_glyph_position[x_index].cluster) {
+                gp = gp_cluster;
+                // Detect if the matching GlyphPosition was non-root for the cluster.
+                if (gp_cluster != &line_glyph_position[x_index]) {
+                    is_cluster_corection = true;
+                }
+            } else {
+                gp = &line_glyph_position[x_index];
+            }
+            break;
+        }
+    }
+
+    if (gp == nullptr) {
+        const GlyphPosition& last_glyph = line_glyph_position.back();
+        return {last_glyph.code_units.end, UPSTREAM};
+    }
+
+    // Find the direction of the run that contains this glyph.
+    TextDirection direction = TextDirection::kLtr;
+    for (const CodeUnitRun& run : code_unit_runs_) {
+        if (gp->code_units.start >= run.code_units.start &&
+            gp->code_units.end <= run.code_units.end) {
+            direction = run.direction;
+            break;
+        }
+    }
+
+    double glyph_center = (gp->x_pos.start + gp->x_pos.end) / 2;
+    // We want to use the root cluster's start when the cluster
+    // was corrected.
+    // TODO(garyq): Detect if the position is in the middle of the cluster
+    // and properly assign the start/end positions.
+    if ((direction == TextDirection::kLtr && dx < glyph_center) ||
+        (direction == TextDirection::kRtl && dx >= glyph_center) || is_cluster_corection) {
+        return {gp->code_units.start, DOWNSTREAM};
+    } else {
+        return {gp->code_units.end, UPSTREAM};
+    }
+}
+
+std::vector<Paragraph::TextBox> ParagraphTxt::GetRectsForPlaceholders() {
+    std::vector<ParagraphTxt::TextBox> boxes;
+
+    // Generate initial boxes and calculate metrics.
+    for (const CodeUnitRun& run : inline_placeholder_code_unit_runs_) {
+        // Check to see if we are finished.
+        double baseline = line_metrics_[run.line_number].baseline;
+        //        SkScalar top = baseline + run.font_metrics.fAscent;
+        //        SkScalar bottom = baseline + run.font_metrics.fDescent;
+        float top = 0.f;
+        float bottom = 0.f;
+
+        if (run.placeholder_run != nullptr) { // Use inline placeholder size as height.
+            top = baseline - run.placeholder_run->baseline_offset;
+            bottom = baseline + run.placeholder_run->height - run.placeholder_run->baseline_offset;
+        }
+
+        // Calculate left and right.
+        float left, right;
+        left = run.x_pos.start;
+        right = run.x_pos.end;
+
+        boxes.emplace_back(minikin::MinikinRect{left, top, right, bottom}, run.direction);
+    }
+    return boxes;
+}
+
+Paragraph::Range<size_t> ParagraphTxt::GetWordBoundary(size_t offset) {
+    if (text_.empty()) {
+        return Range<size_t>{0, 0};
+    }
+
+    if (!word_breaker_) {
+        UErrorCode status = U_ZERO_ERROR;
+        word_breaker_.reset(icu::BreakIterator::createWordInstance(icu::Locale(), status));
+        if (!U_SUCCESS(status)) {
+            return Range<size_t>{0, 0};
+        }
+    }
+
+    word_breaker_->setText(icu::UnicodeString(false, text_.data(), text_.size()));
+
+    int32_t prev_boundary = word_breaker_->preceding(offset + 1);
+    int32_t next_boundary = word_breaker_->next();
+    if (prev_boundary == icu::BreakIterator::DONE) prev_boundary = offset;
+    if (next_boundary == icu::BreakIterator::DONE) next_boundary = offset;
+    return Range<size_t>{static_cast<size_t>(prev_boundary), static_cast<size_t>(next_boundary)};
+}
+
+size_t ParagraphTxt::GetLineCount() {
+    return final_line_count_;
+}
+
+bool ParagraphTxt::DidExceedMaxLines() {
+    return did_exceed_max_lines_;
+}
+
+void ParagraphTxt::SetDirty(bool dirty) {
+    needs_layout_ = dirty;
+}
+
+std::vector<LineMetrics>& ParagraphTxt::GetLineMetrics() {
+    return line_metrics_;
+}
+
 } // namespace txt

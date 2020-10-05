@@ -118,7 +118,7 @@ int runMinikinTest() {
     Bitmap bitmap(250, 50);
     MinikinRect rect;
     layout.getBounds(&rect);
-    printf("rect = {%f, %f, %f, %f}\n", rect.mLeft, rect.mTop, rect.mBottom, rect.mRight);
+    printf("rect = {%f, %f, %f, %f}\n", rect.mLeft, rect.mTop, rect.mRight, rect.mBottom);
     layout.draw(&bitmap, 10, 40, paint.size);
     std::ofstream o;
     o.open("foo.pgm", std::ios::out | std::ios::binary);
