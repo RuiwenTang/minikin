@@ -2,6 +2,8 @@
 // Created by TangRuiwen on 2020/10/01.
 //
 
+#ifndef MINIKIN_INCLUDE_TXT_STYLEDRUNS_H_
+#define MINIKIN_INCLUDE_TXT_STYLEDRUNS_H_
 #include <txt/ParagraphStyle.h>
 
 #include <vector>
@@ -53,3 +55,5 @@ private:
 };
 
 } // namespace txt
+
+#endif MINIKIN_INCLUDE_TXT_STYLEDRUNS_H_

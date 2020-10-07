@@ -21,7 +21,7 @@ class ParagraphBuilderTxt : public ParagraphBuilder {
 public:
     ParagraphBuilderTxt(const ParagraphStyle& style,
                         std::shared_ptr<FontCollection> font_collection);
-    ~ParagraphBuilderTxt() override;
+    ~ParagraphBuilderTxt() noexcept override;
 
     void PushStyle(const TextStyle& style) override;
     void Pop() override;
@@ -50,7 +50,7 @@ private:
     StyledRuns runs_;
 
     ParagraphStyle paragraph_style_;
-    size_t paragraph_style_index_;
+    size_t paragraph_style_index_ = 0;
 };
 } // namespace txt
 
