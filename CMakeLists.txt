@@ -59,6 +59,7 @@ set(MINIKIN_HEADERS
         include/txt/PlaceHolderRun.h
         include/txt/Platform.h
         include/txt/StyledRuns.h
+        include/txt/FontAssetProvider.h
         )
 
 set(MINIKIN_SOURCES
@@ -92,6 +93,7 @@ set(MINIKIN_SOURCES
         libs/txt/StyledRuns.cpp
         libs/txt/ParagraphTxt.h
         libs/txt/ParagraphTxt.cpp
+        libs/txt/FontAssetProvider.cpp
         )
 
 if (${FREETYPE_FOUND})
