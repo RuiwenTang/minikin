@@ -10,6 +10,7 @@
 
 namespace txt {
 
+class FontCollection;
 class Platform {
 public:
     static std::vector<std::string> GetDefaultFontFamilies();

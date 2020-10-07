@@ -56,4 +56,4 @@ private:
 
 } // namespace txt
 
-#endif MINIKIN_INCLUDE_TXT_STYLEDRUNS_H_
+#endif // MINIKIN_INCLUDE_TXT_STYLEDRUNS_H_

@@ -942,7 +942,7 @@ double ParagraphTxt::GetMinIntrinsicWidth() {
 }
 
 // struct that holds calculated metrics for each line.
-static struct LineBoxMetrics {
+struct LineBoxMetrics {
     std::vector<Paragraph::TextBox> boxes;
     float max_right = FLT_MIN;
     float min_left = FLT_MAX;
