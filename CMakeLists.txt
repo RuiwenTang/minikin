@@ -97,6 +97,7 @@ set(MINIKIN_SOURCES
         libs/txt/ParagraphTxt.cpp
         libs/txt/FontAssetProvider.cpp
         libs/txt/FontStyle.cpp
+        libs/txt/HBFontAssetProvider.cpp
         )
 
 if (${FREETYPE_FOUND})

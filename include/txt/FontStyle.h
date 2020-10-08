@@ -90,7 +90,7 @@ public:
     virtual ~FontStyleSet() = default;
 
     virtual uint32_t Count() const = 0;
-    virtual std::string GetStyle(FontStyle* style) = 0;
+    virtual std::string GetStyle(uint32_t index, FontStyle* style) = 0;
     virtual hb_face_t* CreateTypeface(uint32_t index) = 0;
     virtual hb_face_t* MatchStyle(const FontStyle& style) = 0;
 

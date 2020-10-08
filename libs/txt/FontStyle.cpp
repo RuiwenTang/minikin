@@ -54,7 +54,7 @@ hb_face_t* FontStyleSet::MatchStyleCSS3(const FontStyle& style) {
     Score max_score{0, 0};
     for (uint32_t i = 0; i < count; i++) {
         FontStyle current;
-        this->GetStyle(std::addressof(current));
+        this->GetStyle(i, std::addressof(current));
         Score current_score{0, i};
 
         // CSS stretch / FontStyle::Width
