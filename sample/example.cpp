@@ -81,7 +81,7 @@ FontCollection *makeFontCollection() {
     typefaces.push_back(family);
 #endif
 
-#if 1
+#if 0
 #ifndef ANDROID
     family = std::make_shared<FontFamily>();
     const char *emoji = FONT_DIR "/NotoColorEmoji.ttf";
@@ -110,7 +110,7 @@ int runMinikinTest() {
     int bidiFlags = 0;
     FontStyle fontStyle;
     MinikinPaint paint;
-    paint.size = 20;
+    paint.size = 30;
     icu::UnicodeString icuText = icu::UnicodeString::fromUTF8(text);
     layout.doLayout(reinterpret_cast<const uint16_t *>(icuText.getBuffer()), 0, icuText.length(),
                     icuText.length(), bidiFlags, fontStyle, paint);

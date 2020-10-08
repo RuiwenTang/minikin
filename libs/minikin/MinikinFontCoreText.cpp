@@ -11,7 +11,9 @@ namespace minikin {
 uint64_t MinikinFontCoreText::sIdCounter = 0;
 
 MinikinFontCoreText::MinikinFontCoreText(CTFontRef ct_font)
-      : minikin::MinikinFont(sIdCounter++), ct_font_(ct_font) {}
+      : minikin::MinikinFont(sIdCounter++), ct_font_(ct_font) {
+    CFRetain(ct_font_);
+}
 
 MinikinFontCoreText::~MinikinFontCoreText() noexcept {
     CFRelease(ct_font_);
@@ -19,12 +21,10 @@ MinikinFontCoreText::~MinikinFontCoreText() noexcept {
 
 float MinikinFontCoreText::GetHorizontalAdvance(uint32_t glyph_id,
                                                 const minikin::MinikinPaint &paint) const {
-    CGAffineTransform matrix = CTFontGetMatrix(ct_font_);
-    CTFontRef font = CTFontCreateCopyWithAttributes(ct_font_, (double)paint.size,
-                                                    std::addressof(matrix), nullptr);
+    CTFontRef font = CTFontCreateCopyWithAttributes(ct_font_, (double)paint.size, nullptr, nullptr);
 
     CGSize size;
-    CTFontGetAdvancesForGlyphs(font, CTFontOrientation::kCTFontOrientationDefault,
+    CTFontGetAdvancesForGlyphs(font, CTFontOrientation::kCTFontOrientationHorizontal,
                                reinterpret_cast<const CGGlyph *>(std::addressof(glyph_id)),
                                std::addressof(size), 1);
 
@@ -33,7 +33,24 @@ float MinikinFontCoreText::GetHorizontalAdvance(uint32_t glyph_id,
 }
 
 void MinikinFontCoreText::GetBounds(minikin::MinikinRect *bounds, uint32_t glyph_id,
-                                    const minikin::MinikinPaint &paint) const {}
+                                    const minikin::MinikinPaint &paint) const {
+    CTFontRef font = ct_font_;
+    if (paint.size == CTFontGetSize(ct_font_)) {
+        CFRetain(font);
+    } else {
+        font = CTFontCreateCopyWithAttributes(ct_font_, (double)paint.size, nullptr, nullptr);
+    }
+
+    CGRect rect;
+    CGGlyph cg_glyph = glyph_id;
+    CTFontGetBoundingRectsForGlyphs(font, CTFontOrientation::kCTFontOrientationHorizontal,
+                                    std::addressof(cg_glyph), std::addressof(rect), 1);
+    bounds->mLeft = rect.origin.x;
+    bounds->mTop = rect.origin.y;
+    bounds->mBottom = rect.size.height;
+    bounds->mRight = rect.size.width;
+    CFRelease(font);
+}
 
 const void *MinikinFontCoreText::GetTable(uint32_t tag, size_t *size,
                                           minikin::MinikinDestroyFunc *destroy) {
