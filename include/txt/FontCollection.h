@@ -35,8 +35,8 @@ private:
     FontCollection();
     ~FontCollection() = default;
 
-    const std::shared_ptr<minikin::FontFamily>& DoMatchFallbackFont(uint32_t ch,
-                                                                    const std::string& locale);
+    std::shared_ptr<minikin::FontFamily> DoMatchFallbackFont(uint32_t ch,
+                                                             const std::string& locale);
 
     std::shared_ptr<minikin::FontFamily> FindFontFamilyInManagers(const std::string& family_name);
 
@@ -55,6 +55,8 @@ private:
 
     std::unordered_map<FamilyKey, std::shared_ptr<minikin::FontCollection>, FamilyKey::Hasher>
             font_collections_cache_;
+
+    std::unique_ptr<minikin::FontCollection> default_minikin_font_collection_;
 
     // Cache that stores the results of MatchFallbackFont to ensure lag-free emoji
     // font fallback matching.

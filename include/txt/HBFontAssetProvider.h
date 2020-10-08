@@ -7,6 +7,7 @@
 
 #include <txt/FontAssetProvider.h>
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 

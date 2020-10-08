@@ -93,9 +93,30 @@ std::shared_ptr<minikin::FontCollection> FontCollection::GetMinikinFontCollectio
     return font_collection;
 }
 
-std::shared_ptr<minikin::FontFamily> FontCollection::FindFontFamilyInManagers(
-    const std::string& family_name) {
+const std::shared_ptr<minikin::FontFamily>& FontCollection::MatchFallbackFont(
+        uint32_t ch, const std::string& local) {
+    // Check if the ch's matched font has been cached. We cache the results of
+    // this method as repeated matchFamilyStyleCharacter calls can become
+    // extremely laggy when typing a large number of complex emojis.
+    auto lookup = fallback_match_cache_.find(ch);
+    if (lookup != fallback_match_cache_.end()) {
+        return lookup->second;
+    }
+    const std::shared_ptr<minikin::FontFamily> match = DoMatchFallbackFont(ch, local);
+    fallback_match_cache_.insert(std::make_pair(ch, match));
+    return match;
+}
 
+std::shared_ptr<minikin::FontFamily> FontCollection::DoMatchFallbackFont(
+        uint32_t ch, const std::string& locale) {
+
+    
+
+    return g_null_family;
+}
+
+std::shared_ptr<minikin::FontFamily> FontCollection::FindFontFamilyInManagers(
+        const std::string& family_name) {
     // search for the font family in each font manager.
     // TODO implement FontManager interface
     return nullptr;

@@ -4,6 +4,8 @@
 
 #include <txt/FontStyle.h>
 
+#include <cassert>
+
 namespace txt {
 
 struct Score {
