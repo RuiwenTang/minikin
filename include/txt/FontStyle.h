@@ -8,10 +8,12 @@
 #include <hb.h>
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 namespace txt {
 
+class Typeface;
 class FontStyle {
 public:
     enum Weight {
@@ -91,13 +93,13 @@ public:
 
     virtual uint32_t Count() const = 0;
     virtual std::string GetStyle(uint32_t index, FontStyle* style) = 0;
-    virtual hb_face_t* CreateTypeface(uint32_t index) = 0;
-    virtual hb_face_t* MatchStyle(const FontStyle& style) = 0;
+    virtual std::shared_ptr<Typeface> CreateTypeface(uint32_t index) = 0;
+    virtual std::shared_ptr<Typeface> MatchStyle(const FontStyle& style) = 0;
 
     static FontStyleSet* CreateEmpty();
 
 protected:
-    hb_face_t* MatchStyleCSS3(const FontStyle& style);
+    std::shared_ptr<Typeface> MatchStyleCSS3(const FontStyle& style);
 };
 
 } // namespace txt

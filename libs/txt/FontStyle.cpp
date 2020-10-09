@@ -47,7 +47,7 @@ struct Score {
  * If pattern.weight is 500, 400 is checked first
  *   and then the rule for pattern.weight < 400 is used.
  */
-hb_face_t* FontStyleSet::MatchStyleCSS3(const FontStyle& style) {
+std::shared_ptr<Typeface> FontStyleSet::MatchStyleCSS3(const FontStyle& style) {
     uint32_t count = this->Count();
     if (count == 0) {
         return nullptr;

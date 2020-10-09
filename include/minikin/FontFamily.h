@@ -23,6 +23,7 @@
 #include <utils/TypeHelpers.h>
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace minikin {
@@ -36,7 +37,7 @@ class FontStyle {
 public:
     FontStyle() : FontStyle(0 /* variant */, 4 /* weight */, false /* italic */) {}
     FontStyle(int weight, bool italic) : FontStyle(0 /* variant */, weight, italic) {}
-    FontStyle(uint32_t langListId)
+    explicit FontStyle(uint32_t langListId)
           : FontStyle(langListId, 0 /* variant */, 4 /* weight */, false /* italic */) {}
 
     FontStyle(int variant, int weight, bool italic);
@@ -103,7 +104,7 @@ class FontFamily {
 public:
     FontFamily();
 
-    FontFamily(int variant);
+    explicit FontFamily(int variant);
 
     FontFamily(uint32_t langId, int variant)
           : mLangId(langId), mVariant(variant), mHasVSTable(false), mCoverageValid(false) {}
@@ -142,8 +143,8 @@ private:
 
     class Font {
     public:
-        Font(const std::shared_ptr<MinikinFont>& typeface, FontStyle style)
-              : typeface(typeface), style(style) {}
+        Font(std::shared_ptr<MinikinFont>  typeface, FontStyle style)
+              : typeface(std::move(typeface)), style(style) {}
         std::shared_ptr<MinikinFont> typeface;
         FontStyle style;
     };

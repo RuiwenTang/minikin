@@ -3,7 +3,10 @@
 //
 
 #include <txt/FontCollection.h>
+#include <txt/FontManager.h>
+#include <txt/FontStyle.h>
 #include <txt/Platform.h>
+#include <txt/Typeface.h>
 
 #include <algorithm>
 #include <sstream>
@@ -12,6 +15,10 @@ namespace txt {
 
 namespace {
 const std::shared_ptr<minikin::FontFamily> g_null_family;
+}
+
+std::shared_ptr<FontCollection> FontCollection::GetFontCollection() {
+    return std::shared_ptr<FontCollection>(new FontCollection);
 }
 
 FontCollection::FamilyKey::FamilyKey(const std::vector<std::string>& families,
@@ -31,10 +38,21 @@ size_t FontCollection::FamilyKey::Hasher::operator()(const FamilyKey& key) const
     return std::hash<std::string>()(key.font_families) ^ std::hash<std::string>()(key.locale);
 }
 
-FontCollection::FontCollection() : enable_font_fallback_(false) {}
+FontCollection::FontCollection() : enable_font_fallback_(false) {
+    SetupDefaultFontManager();
+    ClearFontFamilyCache();
+}
 
 void FontCollection::DisableFontFallback() {
     enable_font_fallback_ = false;
+}
+
+void FontCollection::ClearFontFamilyCache() {
+    font_collections_cache_.clear();
+}
+
+void FontCollection::SetupDefaultFontManager() {
+    default_font_manager_ = Platform::GetDefaultFontManager();
 }
 
 std::shared_ptr<minikin::FontCollection> FontCollection::GetMinikinFontCollectionForFamilies(
@@ -93,8 +111,8 @@ std::shared_ptr<minikin::FontCollection> FontCollection::GetMinikinFontCollectio
     return font_collection;
 }
 
-const std::shared_ptr<minikin::FontFamily>& FontCollection::MatchFallbackFont(
-        uint32_t ch, const std::string& local) {
+std::shared_ptr<minikin::FontFamily> FontCollection::MatchFallbackFont(uint32_t ch,
+                                                                       const std::string& local) {
     // Check if the ch's matched font has been cached. We cache the results of
     // this method as repeated matchFamilyStyleCharacter calls can become
     // extremely laggy when typing a large number of complex emojis.
@@ -102,24 +120,88 @@ const std::shared_ptr<minikin::FontFamily>& FontCollection::MatchFallbackFont(
     if (lookup != fallback_match_cache_.end()) {
         return lookup->second;
     }
-    const std::shared_ptr<minikin::FontFamily> match = DoMatchFallbackFont(ch, local);
+    std::shared_ptr<minikin::FontFamily> match = DoMatchFallbackFont(ch, local);
     fallback_match_cache_.insert(std::make_pair(ch, match));
     return match;
 }
 
 std::shared_ptr<minikin::FontFamily> FontCollection::DoMatchFallbackFont(
         uint32_t ch, const std::string& locale) {
+    if (!default_font_manager_) {
+        return g_null_family;
+    }
 
-    
+    auto typeface = default_font_manager_->MatchFamilyStyleCharacter("", FontStyle(), locale, ch);
+    if (!typeface) {
+        return g_null_family;
+    }
 
-    return g_null_family;
+    std::string family_name = typeface->GetFamilyName();
+    if (std::find(fallback_fonts_for_locale_[locale].begin(),
+                  fallback_fonts_for_locale_[locale].end(),
+                  family_name) == fallback_fonts_for_locale_[locale].end()) {
+        fallback_fonts_for_locale_[locale].emplace_back(family_name);
+    }
+
+    return GetFallbackFontFamily(default_font_manager_, family_name);
 }
 
 std::shared_ptr<minikin::FontFamily> FontCollection::FindFontFamilyInManagers(
         const std::string& family_name) {
-    // search for the font family in each font manager.
-    // TODO implement FontManager interface
-    return nullptr;
+    return CreateMinikinFontFamily(default_font_manager_, family_name);
+}
+
+std::shared_ptr<minikin::FontFamily> FontCollection::CreateMinikinFontFamily(
+        const std::shared_ptr<FontManager>& manager, const std::string& family_name) {
+    auto font_style = manager->MatchFamily(family_name);
+    if (!font_style || font_style->Count() == 0) {
+        return nullptr;
+    }
+
+    std::vector<std::shared_ptr<Typeface>> typefaces;
+    for (uint32_t i = 0; i < font_style->Count(); i++) {
+        auto typeface = font_style->CreateTypeface(i);
+        if (typeface) {
+            typefaces.emplace_back(std::move(typeface));
+        }
+    }
+
+    std::sort(typefaces.begin(), typefaces.end(),
+              [](const std::shared_ptr<Typeface>& a, const std::shared_ptr<Typeface>& b) {
+                  FontStyle a_style = a->GetStyle();
+                  FontStyle b_style = b->GetStyle();
+                  return (a_style.GetWeight() != b_style.GetWeight()
+                                  ? a_style.GetWeight() < b_style.GetWeight()
+                                  : a_style.GetSlant() < b_style.GetSlant());
+              });
+
+    std::shared_ptr<minikin::FontFamily> family = std::make_shared<minikin::FontFamily>();
+
+    for (auto& typeface : typefaces) {
+        family->addFont(TypefaceFont::MakeFont(typeface));
+    }
+
+    return family;
+}
+
+std::shared_ptr<minikin::FontFamily> FontCollection::GetFallbackFontFamily(
+        const std::shared_ptr<FontManager>& manager, const std::string& family_name) {
+    auto fallback_it = fallback_fonts_.find(family_name);
+    if (fallback_it != fallback_fonts_.end()) {
+        return fallback_it->second;
+    }
+
+    auto minikin_family = CreateMinikinFontFamily(manager, family_name);
+    if (!minikin_family) {
+        return g_null_family;
+    }
+
+    auto insert_it = fallback_fonts_.insert(std::make_pair(family_name, minikin_family));
+
+    // Clear the cache to force creation of new font collections that will include this fallback
+    // font.
+    font_collections_cache_.clear();
+    return insert_it.first->second;
 }
 
 } // namespace txt

@@ -8,12 +8,12 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     cmake_policy(SET CMP0074 NEW)
     find_package(ICU REQUIRED uc io)
     include_directories(${ICU_INCLUDE_DIRS})
-else()
+else ()
     find_package(PkgConfig REQUIRED)
     set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/usr/local/opt/icu4c/")
     pkg_search_module(ICU_UC icu-uc)
     link_directories(${ICU_UC_LIBRARY_DIRS})
-endif()
+endif ()
 find_package(Freetype)
 
 if (${FREETYPE_FOUND})
@@ -23,10 +23,10 @@ endif ()
 
 set(HB_HAVE_ICU ON CACHE BOOL "" FORCE)
 
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     # Fix compile error
     set(BUILD_SHARED_LIBS ON)
-endif()
+endif ()
 add_subdirectory(third_party/harfbuzz)
 
 
@@ -61,7 +61,9 @@ set(MINIKIN_HEADERS
         include/txt/StyledRuns.h
         include/txt/FontAssetProvider.h
         include/txt/FontStyle.h
-        include/txt/HBFontAssetProvider.h
+        include/txt/TypefaceFontAssetProvider.h
+        include/txt/Typeface.h
+        include/txt/FontManager.h
         )
 
 set(MINIKIN_SOURCES
@@ -97,7 +99,9 @@ set(MINIKIN_SOURCES
         libs/txt/ParagraphTxt.cpp
         libs/txt/FontAssetProvider.cpp
         libs/txt/FontStyle.cpp
-        libs/txt/HBFontAssetProvider.cpp
+        libs/txt/TypefaceFontAssetProvider.cpp
+        libs/txt/Typeface.cpp
+        libs/txt/FontManager.cpp
         )
 
 if (${FREETYPE_FOUND})
@@ -110,14 +114,17 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(MINIKIN_SOURCES ${MINIKIN_SOURCES}
             libs/minikin/MinikinFontCoreText.cpp
             libs/txt/platform/PlatformMac.mm
+            libs/txt/platform/PlatformFontMac.cpp
+            libs/txt/platform/CTFontManager.h
             )
 
     set(MINIKIN_LIBS ${MINIKIN_LIBS} "-framework CoreGraphics")
-elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    add_definitions(-DBUILD_FOR_MAC)
+elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     set(MINIKIN_SOURCES ${MINIKIN_SOURCES}
             libs/txt/platform/PlatformWindows.cpp
-        )
-endif()
+            )
+endif ()
 
 set(UTILS_HEADERS
         include/utils/JenkinsHash.h
@@ -140,9 +147,9 @@ add_custom_target(unicode_data
 # FIXME to make sample compiled on windows
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     add_library(minikin STATIC ${MINIKIN_HEADERS} ${MINIKIN_SOURCES} ${UTILS_HEADERS} ${UTILS_SOURCES})
-else()
+else ()
     add_library(minikin SHARED ${MINIKIN_HEADERS} ${MINIKIN_SOURCES} ${UTILS_HEADERS} ${UTILS_SOURCES})
-endif()
+endif ()
 target_include_directories(minikin PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 
@@ -152,9 +159,9 @@ if (${FREETYPE_FOUND})
     set(MINIKIN_LIBS ${MINIKIN_LIBS} ${FREETYPE_LIBRARIES})
 endif ()
 
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     set(MINIKIN_LIBS ${MINIKIN_LIBS} ${ICU_LIBRARIES})
-endif()
+endif ()
 
 target_link_libraries(minikin harfbuzz harfbuzz-icu ${ICU_UC_LIBRARIES} ${MINIKIN_LIBS})
 

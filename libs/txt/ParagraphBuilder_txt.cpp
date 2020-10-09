@@ -69,4 +69,8 @@ std::unique_ptr<Paragraph> ParagraphBuilderTxt::Build() {
     return paragraph;
 }
 
+std::unique_ptr<ParagraphBuilder> ParagraphBuilder::CreateTxtBuilder(const ParagraphStyle &style) {
+    return std::make_unique<ParagraphBuilderTxt>(style, FontCollection::GetFontCollection());
+}
+
 } // namespace txt

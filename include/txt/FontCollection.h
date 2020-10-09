@@ -11,18 +11,20 @@
 #include <unordered_map>
 
 namespace txt {
-
+class FontManager;
 class FontCollection final {
 public:
+    ~FontCollection() = default;
     static std::shared_ptr<FontCollection> GetFontCollection();
+
+    void SetupDefaultFontManager();
 
     std::shared_ptr<minikin::FontCollection> GetMinikinFontCollectionForFamilies(
             const std::vector<std::string>& font_families, const std::string& local);
 
     // Provides a FontFamily that contains glyphs for ch. This caches previously
     // matched fonts. Also see FontCollection::DoMatchFallbackFont.
-    const std::shared_ptr<minikin::FontFamily>& MatchFallbackFont(uint32_t ch,
-                                                                  const std::string& local);
+    std::shared_ptr<minikin::FontFamily> MatchFallbackFont(uint32_t ch, const std::string& local);
 
     // Do not provide alternative fonts that can match characters which are
     // missing from the requested font family.
@@ -33,13 +35,17 @@ public:
 
 private:
     FontCollection();
-    ~FontCollection() = default;
 
     std::shared_ptr<minikin::FontFamily> DoMatchFallbackFont(uint32_t ch,
                                                              const std::string& locale);
 
     std::shared_ptr<minikin::FontFamily> FindFontFamilyInManagers(const std::string& family_name);
 
+    std::shared_ptr<minikin::FontFamily> GetFallbackFontFamily(
+            const std::shared_ptr<FontManager>& manager, const std::string& family_name);
+
+    std::shared_ptr<minikin::FontFamily> CreateMinikinFontFamily(
+            const std::shared_ptr<FontManager>& manager, const std::string& family_name);
     struct FamilyKey {
         std::string font_families;
         std::string locale;
@@ -56,8 +62,7 @@ private:
     std::unordered_map<FamilyKey, std::shared_ptr<minikin::FontCollection>, FamilyKey::Hasher>
             font_collections_cache_;
 
-    std::unique_ptr<minikin::FontCollection> default_minikin_font_collection_;
-
+    std::shared_ptr<FontManager> default_font_manager_;
     // Cache that stores the results of MatchFallbackFont to ensure lag-free emoji
     // font fallback matching.
     std::unordered_map<uint32_t, std::shared_ptr<minikin::FontFamily>> fallback_match_cache_;

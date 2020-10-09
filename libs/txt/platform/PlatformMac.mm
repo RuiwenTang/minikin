@@ -2,6 +2,8 @@
 #include <CoreText/CoreText.h>
 #include <txt/Platform.h>
 
+#include "CTFontManager.h"
+
 namespace txt {
 
 std::vector<std::string> Platform::GetDefaultFontFamilies() {
@@ -16,6 +18,10 @@ std::vector<std::string> Platform::GetDefaultFontFamilies() {
     } else {
         return {"Helvetica"};
     }
+}
+
+std::shared_ptr<FontManager> Platform::GetDefaultFontManager() {
+    return std::make_shared<CTFontManager>();
 }
 
 }
