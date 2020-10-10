@@ -126,6 +126,9 @@ public:
     virtual void GetBounds(MinikinRect* bounds, uint32_t glyph_id,
                            const MinikinPaint& paint) const = 0;
 
+    // Override if font can provide access to hb_face_t
+    virtual hb_face_t* CreateHarfBuzzFace() const { return nullptr; }
+
     virtual const void* GetTable(uint32_t tag, size_t* size, MinikinDestroyFunc* destroy) = 0;
 
     // Override if font can provide access to raw data

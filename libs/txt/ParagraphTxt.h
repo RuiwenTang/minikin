@@ -4,6 +4,7 @@
 
 #include <minikin/LineBreaker.h>
 #include <txt/FontCollection.h>
+#include <txt/PaintRecord.h>
 #include <txt/Paragraph.h>
 #include <txt/ParagraphStyle.h>
 #include <txt/PlaceHolderRun.h>
@@ -104,7 +105,7 @@ private:
     std::vector<double> line_widths_;
 
     // Stores the result of Layout().
-    // std::vector<PaintRecord> records_;
+    std::vector<PaintRecord> records_;
 
     bool did_exceed_max_lines_;
 
@@ -198,14 +199,14 @@ private:
         Range<size_t> code_units;
         Range<double> x_pos;
         size_t line_number;
-        // FontMetrics;
-        // font_metrics;
+        minikin::MinikinFont::FontMetrics font_metrics;
         const TextStyle* style;
         TextDirection direction;
         const PlaceholderRun* placeholder_run;
 
         CodeUnitRun(std::vector<GlyphPosition>&& positions, Range<size_t> code_units,
-                    Range<double> x_pos, size_t line, /* font_metrics, */ const TextStyle& style,
+                    Range<double> x_pos, size_t line,
+                    const minikin::MinikinFont::FontMetrics& metrics, const TextStyle& style,
                     TextDirection direction, const PlaceholderRun* placeholder);
 
         void Shift(double delta);
@@ -266,8 +267,9 @@ private:
 
     bool IsStrutValid() const;
 
-    // TODO implement
-    // UpdateLineMetrics
+    void UpdateLineMetrics(const minikin::MinikinFont::FontMetrics& metrics, const TextStyle& style,
+                           double& max_ascent, double& max_descent, double& max_unscaled_ascent,
+                           PlaceholderRun* placeholder_run, size_t line_number, size_t line_limit);
 
     // Calculate the starting X offset of a line based on the line's width and
     // alignment.

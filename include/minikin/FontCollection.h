@@ -21,6 +21,7 @@
 #include <minikin/MinikinFont.h>
 #include <minikin/MinikinRefCounted.h>
 
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -28,6 +29,15 @@ namespace minikin {
 
 class FontCollection {
 public:
+    // libtxt extension: an interface for looking up fallback fonts for characters
+    // that do not match this collection's font families.
+    class FallbackFontProvider {
+    public:
+        virtual ~FallbackFontProvider() = default;
+
+        virtual std::shared_ptr<FontFamily> MatchFallbackFont(uint32_t ch,
+                                                              const std::string& locale) = 0;
+    };
     explicit FontCollection(const std::vector<std::shared_ptr<FontFamily>>& typefaces);
 
     ~FontCollection();
@@ -54,6 +64,10 @@ public:
 
     uint32_t getId() const;
 
+    void setFallbackFontProvider(std::unique_ptr<FallbackFontProvider> ffp) {
+        mFallbackFontProvider = std::move(ffp);
+    }
+
 private:
     static const int kLogCharsPerPage = 8;
     static const int kPageMask = (1 << kLogCharsPerPage) - 1;
@@ -63,8 +77,8 @@ private:
         size_t end;
     };
 
-    std::shared_ptr<FontFamily> getFamilyForChar(uint32_t ch, uint32_t vs,
-                                                        uint32_t langListId, int variant) const;
+    std::shared_ptr<FontFamily> getFamilyForChar(uint32_t ch, uint32_t vs, uint32_t langListId,
+                                                 int variant) const;
 
     uint32_t calcFamilyScore(uint32_t ch, uint32_t vs, int variant, uint32_t langListId,
                              const std::shared_ptr<FontFamily>& fontFamily) const;
@@ -76,6 +90,8 @@ private:
                                               const FontFamily& fontFamily);
 
     static uint32_t calcVariantMatchingScore(int variant, const FontFamily& fontFamily);
+
+    std::shared_ptr<FontFamily> findFallbackFont(uint32_t ch, uint32_t vs, uint32_t langListId) const;
 
     // static for allocating unique id's
     static uint32_t sNextId;
@@ -99,8 +115,13 @@ private:
 
     // These are offsets into mInstanceVec, one range per page
     std::vector<Range> mRanges;
+
+    std::unique_ptr<FallbackFontProvider> mFallbackFontProvider;
+    // libtxt extension: Fallback fonts discovered after this font collection
+    // was constructed.
+    mutable std::map<std::string, std::vector<std::shared_ptr<FontFamily>>> mCachedFallbackFamilies;
 };
 
-} // namespace android
+} // namespace minikin
 
 #endif // MINIKIN_FONT_COLLECTION_H

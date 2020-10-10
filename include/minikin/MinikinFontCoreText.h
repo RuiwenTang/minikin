@@ -20,7 +20,6 @@ public:
     void GetBounds(minikin::MinikinRect *bounds, uint32_t glyph_id,
                    const minikin::MinikinPaint &paint) const override;
     const void *GetTable(uint32_t tag, size_t *size, minikin::MinikinDestroyFunc *destroy) override;
-    size_t GetFontSize() const override;
     bool Render(uint32_t glyph_id, const minikin::MinikinPaint &paint,
                 minikin::GlyphBitmap *result) override;
 

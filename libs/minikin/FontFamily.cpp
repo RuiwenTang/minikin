@@ -71,7 +71,8 @@ FontFamily::~FontFamily() {
 }
 
 bool FontFamily::addFont(const std::shared_ptr<MinikinFont>& typeface) {
-    std::lock_guard<std::mutex> _l(gMinikinLock);
+    // FIXME to resolve dead lock
+    // std::lock_guard<std::mutex> _l(gMinikinLock);
     const uint32_t os2Tag = MinikinFont::MakeTag('O', 'S', '/', '2');
     HbBlob os2Table(getFontTable(typeface.get(), os2Tag));
     if (os2Table.get() == nullptr) return false;
@@ -96,7 +97,7 @@ void FontFamily::addFont(const std::shared_ptr<MinikinFont>& typeface, FontStyle
 }
 
 void FontFamily::addFontLocked(const std::shared_ptr<MinikinFont>& typeface, FontStyle style) {
-    mFonts.push_back(Font(typeface, style));
+    mFonts.emplace_back(typeface, style);
     mCoverageValid = false;
 }
 

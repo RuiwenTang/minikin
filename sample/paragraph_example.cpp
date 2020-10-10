@@ -17,6 +17,7 @@ int main(int argc, const char** argv) {
     txt::ParagraphStyle paragraph_style;
     paragraph_style.strut_enabled = true;
     paragraph_style.force_strut_height = true;
+//    paragraph_style.text_align = txt::TextAlign::kJustify;
 
     auto builder = txt::ParagraphBuilder::CreateTxtBuilder(paragraph_style);
     builder->PushStyle(style);

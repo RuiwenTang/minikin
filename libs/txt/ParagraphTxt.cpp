@@ -5,12 +5,16 @@
 #include "ParagraphTxt.h"
 
 #include <hb.h>
+#include <minikin/GraphemeBreak.h>
 #include <minikin/Layout.h>
+#include <txt/PlaceHolderRun.h>
+#include <txt/Typeface.h>
 #include <unicode/ubidi.h>
 
 #include <algorithm>
 #include <cstring>
 #include <numeric>
+#include <utility>
 
 #include "../minikin/FontLanguageListCache.h"
 #include "../minikin/LayoutUtils.h"
@@ -19,27 +23,27 @@ namespace txt {
 
 class GlyphTypeface {
 public:
-    GlyphTypeface(hb_blob_t* raw_font, minikin::FontFakery fakery)
-          : raw_font_(raw_font),
+    GlyphTypeface(std::shared_ptr<Typeface> typeface, minikin::FontFakery fakery)
+          : typeface_(std::move(typeface)),
             fake_bold_(fakery.isFakeBold()),
             fake_italic_(fakery.isFakeItalic()) {}
 
     bool operator==(GlyphTypeface& other) {
-        return raw_font_ == other.raw_font_ && fake_bold_ == other.fake_bold_ &&
+        return typeface_ == other.typeface_ && fake_bold_ == other.fake_bold_ &&
                 fake_italic_ == other.fake_italic_;
     }
 
     bool operator!=(GlyphTypeface& other) { return !(*this == other); }
 
 private:
-    hb_blob_t* raw_font_;
+    std::shared_ptr<Typeface> typeface_;
     bool fake_bold_;
     bool fake_italic_;
 };
 
 static GlyphTypeface GetGlyphTypeface(const minikin::Layout& layout, size_t index) {
-    minikin::MinikinFont* font = layout.getFont(index);
-    return GlyphTypeface{(hb_blob_t*)(font->GetFontData()), layout.getFakery(index)};
+    auto* font = dynamic_cast<TypefaceFont*>(layout.getFont(index));
+    return GlyphTypeface{font->GetTypeface(), layout.getFakery(index)};
 }
 
 // Return ranges of text that have the same typeface in the layout.
@@ -95,9 +99,9 @@ static int GetWeight(const TextStyle& style) {
 
 static bool GetItalic(const TextStyle& style) {
     switch (style.font_style) {
-        case FontStyle::Italic:
+        case FontStyleEnum::Italic:
             return true;
-        case FontStyle::Normal:
+        case FontStyleEnum::Normal:
         default:
             return false;
     }
@@ -107,7 +111,7 @@ static minikin::FontStyle GetMinikinFontStyle(const TextStyle& style) {
     uint32_t language_list_id = style.local.empty()
             ? minikin::FontLanguageListCache::kEmptyListId
             : minikin::FontStyle::registerLanguageList(style.local);
-    return minikin::FontStyle(language_list_id, 0, GetWeight(style), GetItalic(style));
+    return {language_list_id, 0, GetWeight(style), GetItalic(style)};
 }
 
 static void GetFontAndMinikinPaint(const TextStyle& style, minikin::FontStyle* font,
@@ -162,12 +166,15 @@ ParagraphTxt::GlyphLine::GlyphLine(std::vector<GlyphPosition>&& positions, size_
       : positions(std::move(positions)), total_code_units(total_code_units) {}
 
 ParagraphTxt::CodeUnitRun::CodeUnitRun(std::vector<GlyphPosition>&& positions, Range<size_t> cu,
-                                       Range<double> x_pos, size_t line, const TextStyle& style,
-                                       TextDirection direction, const PlaceholderRun* placeholder)
+                                       Range<double> x_pos, size_t line,
+                                       const minikin::MinikinFont::FontMetrics& metrics,
+                                       const TextStyle& style, TextDirection direction,
+                                       const PlaceholderRun* placeholder)
       : positions(std::move(positions)),
         code_units(cu),
         x_pos(x_pos),
         line_number(line),
+        font_metrics(metrics),
         style(std::addressof(style)),
         direction(direction),
         placeholder_run(placeholder) {}
@@ -214,7 +221,7 @@ void ParagraphTxt::Layout(double width) {
 
     needs_layout_ = false;
 
-    // records_.clear();
+    records_.clear();
     glyph_lines_.clear();
     code_unit_runs_.clear();
     inline_placeholder_code_unit_runs_.clear();
@@ -330,7 +337,7 @@ void ParagraphTxt::Layout(double width) {
         double run_x_offset = 0;
         double justify_x_offset = 0;
         size_t cluster_unique_id = 0;
-        // std::vector<PaintRecord> paint_records;
+        std::vector<PaintRecord> paint_records;
 
         for (auto line_run_it = line_runs.begin(); line_run_it != line_runs.end(); line_run_it++) {
             const BidiRun& run = *line_run_it;
@@ -417,14 +424,184 @@ void ParagraphTxt::Layout(double width) {
             // Break the layout into blobs that share the same Paint parameters.
             std::vector<Range<size_t>> glyph_blobs = GetLayoutTypefaceRuns(layout);
 
-            double constexpr word_start_position = std::numeric_limits<double>::quiet_NaN();
+            double word_start_position = std::numeric_limits<double>::quiet_NaN();
 
             // TODO implement
             // Build  Text blob from each group of glyphs.
             for (const Range<size_t>& glyph_blob : glyph_blobs) {
                 std::vector<GlyphPosition> glyph_positions;
 
-                GetGlyphTypeface(layout, glyph_blob.start);
+                GlyphTypeface typeface = GetGlyphTypeface(layout, glyph_blob.start);
+                double justify_x_offset_delta = 0;
+
+                std::vector<uint32_t> blob_buffer;
+
+                for (size_t glyph_index = glyph_blob.start; glyph_index < glyph_blob.end;) {
+                    size_t cluster_start_glyph_index = glyph_index;
+                    uint32_t cluster = layout.getGlyphCluster(cluster_start_glyph_index);
+                    double glyph_x_offset;
+                    // Add all the glyphs in this cluster to the text blob
+                    do {
+                        size_t blob_index = glyph_index - glyph_blob.start;
+                        blob_buffer.emplace_back(layout.getGlyphId(glyph_index));
+                        //                        blob_pos.emplace_back(layout.getX(glyph_index) +
+                        //                        justify_x_offset_delta);
+                        //                        blob_pos.emplace_back(layout.getY(glyph_index));
+
+                        //                        if (glyph_index == cluster_start_glyph_index) {
+                        //                            glyph_x_offset = blob_pos[blob_pos.size() -
+                        //                            2];
+                        //                        }
+                        glyph_index++;
+                    } while (glyph_index < glyph_blob.end &&
+                             layout.getGlyphCluster(glyph_index) == cluster);
+
+                    Range<int32_t> glyph_code_units(cluster, 0);
+                    std::vector<size_t> grapheme_code_unit_counts;
+                    if (run.IsRTL()) {
+                        if (cluster_start_glyph_index > 0) {
+                            glyph_code_units.end =
+                                    layout.getGlyphCluster(cluster_start_glyph_index - 1);
+                        } else {
+                            glyph_code_units.end = text_count;
+                        }
+                        grapheme_code_unit_counts.push_back(glyph_code_units.width());
+                    } else {
+                        if (glyph_index < layout.nGlyphs()) {
+                            glyph_code_units.end = layout.getGlyphCluster(glyph_index);
+                        } else {
+                            glyph_code_units.end = text_count;
+                        }
+
+                        // The glyph may be a ligature.  Determine how many graphemes are
+                        // joined into this glyph and how many input code units map to
+                        // each grapheme.
+                        size_t code_unit_count = 1;
+                        for (int32_t offset = glyph_code_units.start + 1;
+                             offset < glyph_code_units.end; offset++) {
+                            if (minikin::GraphemeBreak::isGraphemeBreak(text_ptr, text_start,
+                                                                        text_count, offset)) {
+                                grapheme_code_unit_counts.push_back(code_unit_count);
+                                code_unit_count = 1;
+                            } else {
+                                code_unit_count++;
+                            }
+                        }
+                        grapheme_code_unit_counts.push_back(code_unit_count);
+                    }
+
+                    float glyph_advance = layout.getCharAdvance(glyph_code_units.start);
+                    float grapheme_advance = glyph_advance / grapheme_code_unit_counts.size();
+
+                    glyph_positions.emplace_back(run_x_offset + glyph_x_offset, grapheme_advance,
+                                                 run.Start() + glyph_code_units.start,
+                                                 grapheme_code_unit_counts[0], cluster_unique_id);
+
+                    // Compute positions for the additional graphemes in the ligature.
+                    for (size_t i = 1; i < grapheme_code_unit_counts.size(); ++i) {
+                        glyph_positions.emplace_back(glyph_positions.back().x_pos.end,
+                                                     grapheme_advance,
+                                                     glyph_positions.back().code_units.start +
+                                                             grapheme_code_unit_counts[i - 1],
+                                                     grapheme_code_unit_counts[i],
+                                                     cluster_unique_id);
+                    }
+                    cluster_unique_id++;
+
+                    bool at_word_start = false;
+                    bool at_word_end = false;
+                    if (word_index < words.size()) {
+                        at_word_start =
+                                words[word_index].start == run.Start() + glyph_code_units.start;
+                        at_word_end = words[word_index].end == run.Start() + glyph_code_units.end;
+                        if (line_runs_all_rtl) {
+                            std::swap(at_word_start, at_word_end);
+                        }
+                    }
+
+                    if (at_word_start) {
+                        word_start_position = run_x_offset + glyph_x_offset;
+                    }
+
+                    if (at_word_end) {
+                        if (justify_line) {
+                            justify_x_offset_delta += word_gap_width;
+                        }
+                        word_index++;
+
+                        if (!isnan(word_start_position)) {
+                            double word_width =
+                                    glyph_positions.back().x_pos.end - word_start_position;
+                            max_word_width = std::max(word_width, max_word_width);
+                            word_start_position = std::numeric_limits<double>::quiet_NaN();
+                        }
+                    }
+                } // for each in glyph_blobs
+
+                if (glyph_positions.empty()) {
+                    continue;
+                }
+
+                // Store the font metrics and TextStyle in the LineMetrics for this line
+                // to provide metrics upon user request. We index this RunMetrics
+                // instance at `run.end() - 1` to allow map::lower_bound to access the
+                // correct RunMetrics at any text index.
+                size_t run_key = run.End() - 1;
+
+                line_metrics.run_metrics.emplace(run_key, &run.Style());
+                auto metrics = &line_metrics.run_metrics.at(run_key).font_metrics;
+                minikin_font_collection->baseFont(minikin_font)
+                        ->GetMetrics(metrics, minikin_paint.size);
+
+                Range<double> record_x_pos(glyph_positions.front().x_pos.start - run_x_offset,
+                                           glyph_positions.back().x_pos.end - run_x_offset);
+                if (run.IsPlaceholderRun()) {
+                    paint_records.emplace_back(
+                            PaintRecord{run.Style(), std::move(blob_buffer),
+                                        static_cast<float>(run_x_offset + justify_x_offset), 0.f,
+                                        *metrics, line_number,
+                                        static_cast<float>(record_x_pos.start),
+                                        static_cast<float>(record_x_pos.start +
+                                                           run.PlaceholdrRun()->width),
+                                        run.IsGhost(), run.PlaceholdrRun()});
+                } else {
+                    paint_records.emplace_back(
+                            PaintRecord{run.Style(), std::move(blob_buffer),
+                                        static_cast<float>(run_x_offset + justify_x_offset), 0.f,
+                                        *metrics, line_number,
+                                        static_cast<float>(record_x_pos.start),
+                                        static_cast<float>(record_x_pos.end), run.IsGhost()});
+                }
+                justify_x_offset += justify_x_offset_delta;
+
+                line_glyph_positions.insert(line_glyph_positions.end(), glyph_positions.begin(),
+                                            glyph_positions.end());
+
+                // Add a record of glyph positions sorted by code unit index.
+                std::vector<GlyphPosition> code_unit_positions(glyph_positions);
+                std::sort(code_unit_positions.begin(), code_unit_positions.end(),
+                          [](const GlyphPosition& a, const GlyphPosition& b) {
+                              return a.code_units.start < b.code_units.start;
+                          });
+                line_code_unit_runs
+                        .emplace_back(std::move(code_unit_positions),
+                                      Range<size_t>(run.Start(), run.End()),
+                                      Range<double>(glyph_positions.front().x_pos.start,
+                                                    run.IsPlaceholderRun()
+                                                            ? glyph_positions.back().x_pos.start +
+                                                                    run.PlaceholdrRun()->width
+                                                            : glyph_positions.back().x_pos.end),
+                                      line_number, *metrics, run.Style(), run.Direction(),
+                                      run.PlaceholdrRun());
+
+                if (run.IsPlaceholderRun()) {
+                    line_inline_placeholder_code_unit_runs.push_back(line_code_unit_runs.back());
+                }
+
+                if (!run.IsGhost()) {
+                    min_left_ = std::min(min_left_, glyph_positions.front().x_pos.start);
+                    max_right_ = std::max(max_right_, glyph_positions.back().x_pos.end);
+                }
             } // for each in glyph_blobs
 
             // Do not increase x offset for LTR trailing ghost runs as it should not
@@ -469,12 +646,17 @@ void ParagraphTxt::Layout(double width) {
         double max_ascent = strut_.ascent + strut_.half_leading;
         double max_descent = strut_.descent + strut_.half_leading;
         double max_unscaled_ascent = 0;
-
-        // TODO UpdateLineMetrics
+        for (const PaintRecord& paint_record : paint_records) {
+            UpdateLineMetrics(paint_record.Metrics(), paint_record.Style(), max_ascent, max_descent,
+                              max_unscaled_ascent, paint_record.GetPlaceHolderRun(), line_number,
+                              line_limit);
+        }
 
         // If no fonts were actually rendered, then compute a baseline based on the font of
         // paragraph style
-        // TODO implement
+        if (paint_records.empty()) {
+            // TODO implement
+        }
 
         // Calcluate the baselines. This is only done on the first line.
         if (line_number == 0) {
@@ -498,6 +680,12 @@ void ParagraphTxt::Layout(double width) {
         line_metrics.left = line_x_offset;
 
         final_line_count_++;
+
+        for (PaintRecord& paint_record : paint_records) {
+            paint_record.SetOffset(paint_record.XOffset() + static_cast<float>(line_x_offset),
+                                   static_cast<float>(y_offset));
+            records_.emplace_back(std::move(paint_record));
+        }
 
     } // for each line_number
 
@@ -827,7 +1015,8 @@ void ParagraphTxt::ComputeStrut(StrutMetrics* strut, minikin::MinikinFont* font 
     // we only force the strut if the strut is non-zero and valid.
     strut->force_strut = paragraph_style_.force_strut_height;
     minikin::FontStyle minikin_font_style{0, GetWeight(paragraph_style_.strut_font_weight),
-                                          paragraph_style_.strut_font_style == FontStyle::Italic};
+                                          paragraph_style_.strut_font_style ==
+                                                  FontStyleEnum::Italic};
 
     std::shared_ptr<minikin::FontCollection> collection =
             font_collection_
@@ -926,6 +1115,94 @@ void ParagraphTxt::ComputePlaceholder(PlaceholderRun* placeholder_run, double& a
 bool ParagraphTxt::IsStrutValid() const {
     // Font size must be positive.
     return (paragraph_style_.strut_enabled && paragraph_style_.strut_font_size >= 0);
+}
+
+void ParagraphTxt::UpdateLineMetrics(const minikin::MinikinFont::FontMetrics& metrics,
+                                     const TextStyle& style, double& max_ascent,
+                                     double& max_descent, double& max_unscaled_ascent,
+                                     PlaceholderRun* placeholder_run, size_t line_number,
+                                     size_t line_limit) {
+    if (!strut_.force_strut) {
+        double ascent;
+        double descent;
+        if (style.has_height_override) {
+            // Scale the ascent and descent such that the sum of ascent and
+            // descent is `fontsize * style.height * style.font_size`.
+            //
+            // The raw metrics do not add up to fontSize. The state of font
+            // metrics is a mess:
+            //
+            // Each font has 4 sets of vertical metrics:
+            //
+            // * hhea: hheaAscender, hheaDescender, hheaLineGap.
+            //     Used by Apple.
+            // * OS/2 typo: typoAscender, typoDescender, typoLineGap.
+            //     Used sometimes by Windows for layout.
+            // * OS/2 win: winAscent, winDescent.
+            //     Also used by Windows, generally will be cut if extends past
+            //     these metrics.
+            // * EM Square: ascent, descent
+            //     Not actively used, but this defines the 'scale' of the
+            //     units used.
+            //
+            // `Use Typo Metrics` is a boolean that, when enabled, prefers
+            // typo metrics over win metrics. Default is off. Enabled by most
+            // modern fonts.
+            //
+            // In addition to these different sets of metrics, there are also
+            // multiple strategies for using these metrics:
+            //
+            // * Adobe: Set hhea values to typo equivalents.
+            // * Microsoft: Set hhea values to win equivalents.
+            // * Web: Use hhea values for text, regardless of `Use Typo Metrics`
+            //     The hheaLineGap is distributed half across the top and half
+            //     across the bottom of the line.
+            //   Exceptions:
+            //     Windows: All browsers respect `Use Typo Metrics`
+            //     Firefox respects `Use Typo Metrics`.
+            //
+            // This pertains to this code in that it is ambiguous which set of
+            // metrics we are actually using via SkFontMetrics. This in turn
+            // means that if we use the raw metrics, we will see differences
+            // between platforms as well as unpredictable line heights.
+            //
+            // A more thorough explanation is available at
+            // https://glyphsapp.com/tutorials/vertical-metrics
+            //
+            // Doing this ascent/descent normalization to the EM Square allows
+            // a sane, consistent, and reasonable line height to be specified,
+            // though it breaks with what is done by any of the platforms above.
+            double metrics_height = -metrics.ascent + metrics.descent;
+            ascent = (-metrics.ascent / metrics_height) * style.height * style.font_size;
+            descent = (metrics.descent / metrics_height) * style.height * style.font_size;
+        } else {
+            // Use the font-provided ascent, descent, and leading directly.
+            ascent = (-metrics.ascent + metrics.leading / 2);
+            descent = (metrics.descent + metrics.leading / 2);
+        }
+
+        // Account for text_height_behavior in paragraph_style_.
+        //
+        // Disable first line ascent modifications.
+        if (line_number == 0 &&
+            paragraph_style_.text_height_behavior & TextHeightBehavior::kDisableFirstAscent) {
+            ascent = -metrics.ascent;
+        }
+        // Disable last line descent modifications.
+        if (line_number == line_limit - 1 &&
+            paragraph_style_.text_height_behavior & TextHeightBehavior::kDisableLastDescent) {
+            descent = metrics.descent;
+        }
+
+        ComputePlaceholder(placeholder_run, ascent, descent);
+
+        max_ascent = std::max(ascent, max_ascent);
+        max_descent = std::max(descent, max_descent);
+    }
+
+    max_unscaled_ascent = std::max(placeholder_run == nullptr ? -metrics.ascent
+                                                              : placeholder_run->baseline_offset,
+                                   max_unscaled_ascent);
 }
 
 double ParagraphTxt::GetLineXOffset(double line_total_advance, bool justify_line) {

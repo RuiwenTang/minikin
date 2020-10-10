@@ -16,7 +16,7 @@
 
 namespace txt {
 
-enum class FontStyle {
+enum class FontStyleEnum {
     Normal,
     Italic,
 };
@@ -74,7 +74,7 @@ enum TextHeightBehavior {
 class TextStyle {
 public:
     FontWeight font_weight = FontWeight::w400;
-    FontStyle font_style = FontStyle::Normal;
+    FontStyleEnum font_style = FontStyleEnum::Normal;
     // An ordered list of fonts in order of priority. The first font is more
     // highly preferred than the last font.
     std::vector<std::string> font_families;
@@ -152,7 +152,7 @@ public:
 class ParagraphStyle final {
 public:
     FontWeight font_weight = FontWeight::w400;
-    FontStyle font_style = FontStyle::Normal;
+    FontStyleEnum font_style = FontStyleEnum::Normal;
     std::string font_family = "";
     double font_size = 14;
     double height = 1;
@@ -161,7 +161,7 @@ public:
 
     bool strut_enabled = false;
     FontWeight strut_font_weight = FontWeight::w400;
-    FontStyle strut_font_style = FontStyle::Normal;
+    FontStyleEnum strut_font_style = FontStyleEnum::Normal;
     std::vector<std::string> strut_font_families;
     double strut_font_size = 14;
     double strut_height = 1;

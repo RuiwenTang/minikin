@@ -117,7 +117,6 @@ public:
     void addFont(const std::shared_ptr<MinikinFont>& typeface, FontStyle style);
     FakedFont getClosestMatch(FontStyle style) const;
 
-
     uint32_t langId() const { return mLangId; }
     int variant() const { return mVariant; }
 
@@ -157,6 +156,6 @@ private:
     bool mCoverageValid;
 };
 
-} // namespace android
+} // namespace minikin
 
 #endif // MINIKIN_FONT_FAMILY_H

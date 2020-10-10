@@ -61,6 +61,8 @@ struct LayoutGlyph {
     unsigned int glyph_id;
     float x;
     float y;
+
+    uint32_t cluster;
 };
 
 // Internal state used during layout operation
@@ -130,6 +132,8 @@ public:
     float getCharAdvance(size_t i) const { return mAdvances[i]; }
 
     void getBounds(MinikinRect* rect);
+
+    uint32_t getGlyphCluster(int i) const;
 
     // Purge all caches, useful in low memory conditions
     static void purgeCaches();

@@ -62,9 +62,7 @@ const void *MinikinFontCoreText::GetTable(uint32_t tag, size_t *size,
     return hb_blob_get_data(blob, reinterpret_cast<unsigned int *>(size));
 }
 
-size_t MinikinFontCoreText::GetFontSize() const {
-    return CTFontGetSize(ct_font_);
-}
+
 
 bool MinikinFontCoreText::Render(uint32_t glyph_id, const minikin::MinikinPaint &paint,
                                  minikin::GlyphBitmap *result) {

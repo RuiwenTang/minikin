@@ -12,8 +12,20 @@
 
 namespace txt {
 class FontManager;
-class FontCollection final {
+class FontCollection final : public std::enable_shared_from_this<FontCollection> {
 public:
+    class TxtFallbackFontProvider : public minikin::FontCollection::FallbackFontProvider {
+    public:
+        explicit TxtFallbackFontProvider(const std::shared_ptr<FontCollection>& font_collection)
+              : font_collection_(font_collection) {}
+
+        std::shared_ptr<minikin::FontFamily> MatchFallbackFont(uint32_t ch,
+                                                               const std::string& locale) override;
+
+    private:
+        std::weak_ptr<FontCollection> font_collection_;
+    };
+
     ~FontCollection() = default;
     static std::shared_ptr<FontCollection> GetFontCollection();
 

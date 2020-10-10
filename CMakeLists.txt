@@ -64,6 +64,7 @@ set(MINIKIN_HEADERS
         include/txt/TypefaceFontAssetProvider.h
         include/txt/Typeface.h
         include/txt/FontManager.h
+        include/txt/PaintRecord.h
         )
 
 set(MINIKIN_SOURCES
@@ -102,6 +103,7 @@ set(MINIKIN_SOURCES
         libs/txt/TypefaceFontAssetProvider.cpp
         libs/txt/Typeface.cpp
         libs/txt/FontManager.cpp
+        libs/txt/PaintRecord.cpp
         )
 
 if (${FREETYPE_FOUND})

@@ -269,15 +269,43 @@ uint32_t FontCollection::calcVariantMatchingScore(int variant, const FontFamily&
     return (fontFamily.variant() == 0 || fontFamily.variant() == variant) ? 1 : 0;
 }
 
+std::shared_ptr<FontFamily> FontCollection::findFallbackFont(uint32_t ch, uint32_t vs,
+                                                             uint32_t langListId) const {
+    const FontLanguages& langs = FontLanguageListCache::getById(langListId);
+    std::string locale = !langs.empty() ? langs[0].getString() : "";
+
+    const auto& it = mCachedFallbackFamilies.find(locale);
+    if (it != mCachedFallbackFamilies.end()) {
+        for (const auto& fallbackFamily : it->second) {
+            if (fallbackFamily->hasGlyph(ch, vs)) {
+                return fallbackFamily;
+            }
+        }
+    }
+
+    auto fallback = mFallbackFontProvider->MatchFallbackFont(ch, locale);
+    if (fallback) {
+        mCachedFallbackFamilies[locale].push_back(fallback);
+    }
+    return fallback;
+}
+
 // Implement heuristic for choosing best-match font. Here are the rules:
 // 1. If first font in the collection has the character, it wins.
 // 2. Calculate a score for the font family. See comments in calcFamilyScore for the detail.
 // 3. Highest score wins, with ties resolved to the first font.
 // This method never returns nullptr.
 std::shared_ptr<FontFamily> FontCollection::getFamilyForChar(uint32_t ch, uint32_t vs,
-                                                                    uint32_t langListId,
-                                                                    int variant) const {
+                                                             uint32_t langListId,
+                                                             int variant) const {
     if (ch >= mMaxChar) {
+        // libtxt: check if the fallback font provider can match this character
+        if (mFallbackFontProvider) {
+            std::shared_ptr<FontFamily> fallback = findFallbackFont(ch, vs, langListId);
+            if (fallback) {
+                return fallback;
+            }
+        }
         return mFamilies[0];
     }
 
@@ -318,6 +346,13 @@ std::shared_ptr<FontFamily> FontCollection::getFamilyForChar(uint32_t ch, uint32
         }
     }
     if (bestFamily == nullptr) {
+        // libtxt: check if the fallback font provider can match this character
+        if (mFallbackFontProvider) {
+            std::shared_ptr<FontFamily> fallback = findFallbackFont(ch, vs, langListId);
+            if (fallback) {
+                return fallback;
+            }
+        }
         UErrorCode errorCode = U_ZERO_ERROR;
         const UNormalizer2* normalizer = unorm2_getNFDInstance(&errorCode);
         if (U_SUCCESS(errorCode)) {

@@ -479,12 +479,13 @@ std::shared_ptr<Typeface> CTFontManager::MatchFamilyStyleCharacter(const std::st
     CTFontRef familyFont = CTFontCreateWithFontDescriptor(desc, 0, nullptr);
     CFStringRef string = CFStringCreateWithBytes(kCFAllocatorDefault,
                                                  reinterpret_cast<const uint8_t*>(&character),
-                                                 sizeof(character), kCFStringEncodingUTF32, false);
+                                                 sizeof(character), kCFStringEncodingUTF16, false);
     // If 0xD800 <= codepoint <= 0xDFFF || 0x10FFFF < codepoint 'string' may be nullptr.
     // No font should be covering such codepoints (even the magic fallback font).
     if (!string) {
         CFRelease(desc);
         CFRelease(familyFont);
+        return nullptr;
     }
 
     CFRange range = CFRangeMake(0, CFStringGetLength(string));
@@ -537,7 +538,12 @@ public:
                                                   0, nullptr);
     }
 
-    ~CTTypefaceFont() override { CFRelease(ct_font_); }
+    ~CTTypefaceFont() override {
+        CFRelease(ct_font_);
+        if (hb_font_) {
+            hb_font_destroy(hb_font_);
+        }
+    }
 
     float GetHorizontalAdvance(uint32_t glyph_id,
                                const minikin::MinikinPaint& paint) const override {
@@ -591,7 +597,25 @@ public:
         return hb_blob_get_data(blob, reinterpret_cast<unsigned int*>(size));
     }
 
-    size_t GetFontSize() const override { return CTFontGetSize(ct_font_); }
+    hb_face_t* CreateHarfBuzzFace() const override {
+        if (hb_font_ == nullptr) {
+            hb_font_ = hb_coretext_font_create(ct_font_);
+        }
+
+        return hb_face_reference(hb_font_get_face(hb_font_));
+    }
+
+
+    size_t GetFontSize() const override {
+        hb_font_t* hb_font = hb_coretext_font_create(ct_font_);
+        hb_face_t* hb_face = hb_font_get_face(hb_font);
+        hb_blob_t* blob = hb_face_reference_blob(hb_face);
+
+        size_t length = 0;
+        hb_blob_get_data(blob, reinterpret_cast<unsigned int*>(&length));
+        hb_font_destroy(hb_font);
+        return length;
+    }
 
     bool Render(uint32_t glyph_id, const minikin::MinikinPaint& paint,
                 minikin::GlyphBitmap* result) override {
@@ -625,6 +649,7 @@ public:
 
 private:
     CTFontRef ct_font_{};
+    mutable hb_font_t* hb_font_ = nullptr;
 };
 
 std::shared_ptr<TypefaceFont> CTFontManager::MakeFont(const std::shared_ptr<Typeface>& typeface) {

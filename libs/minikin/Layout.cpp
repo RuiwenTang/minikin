@@ -892,7 +892,8 @@ void Layout::appendLayout(Layout* src, size_t start) {
         unsigned int glyph_id = srcGlyph.glyph_id;
         float x = x0 + srcGlyph.x;
         float y = srcGlyph.y;
-        LayoutGlyph glyph = {font_ix, glyph_id, x, y};
+        LayoutGlyph glyph = {font_ix, glyph_id, x, y,
+                             static_cast<uint32_t>(srcGlyph.cluster + start)};
         mGlyphs.push_back(glyph);
     }
     for (size_t i = 0; i < src->mAdvances.size(); i++) {
@@ -975,6 +976,11 @@ void Layout::getAdvances(float* advances) {
 
 void Layout::getBounds(MinikinRect* bounds) {
     bounds->set(mBounds);
+}
+
+uint32_t Layout::getGlyphCluster(int i) const {
+    const LayoutGlyph& glyph = mGlyphs[i];
+    return glyph.cluster;
 }
 
 void Layout::purgeCaches() {
