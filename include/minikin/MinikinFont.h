@@ -111,7 +111,13 @@ typedef void (*MinikinDestroyFunc)(void* data);
 
 class MinikinFont {
 public:
-    MinikinFont(int32_t uniqueId) : mUniqueId(uniqueId) {}
+    struct FontMetrics {
+        float ascent = 0.f;
+        float descent = 0.f;
+        float leading = 0.f;
+    };
+
+    explicit MinikinFont(int32_t uniqueId) : mUniqueId(uniqueId) {}
 
     virtual ~MinikinFont();
 
@@ -134,6 +140,9 @@ public:
 
     // Override if font can provide FamilyNames
     virtual std::string GetFamilyName() { return ""; }
+
+    // Override if font can provide Metrics information
+    virtual void GetMetrics(FontMetrics* metrics, float size) {}
 
     static uint32_t MakeTag(char c1, char c2, char c3, char c4) {
         return ((uint32_t)c1 << 24) | ((uint32_t)c2 << 16) | ((uint32_t)c3 << 8) | (uint32_t)c4;

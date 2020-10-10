@@ -237,7 +237,7 @@ void ParagraphTxt::Layout(double width) {
     double max_word_width = 0;
 
     // Compute strut minimums according to paragraph_style_.
-    ComputeStruct(std::addressof(strut_), nullptr);
+    ComputeStrut(std::addressof(strut_), nullptr);
 
     // Paragraph bounds tracking.
     size_t line_limit = std::min(paragraph_style_.max_lines, line_metrics_.size());
@@ -811,7 +811,7 @@ bool ParagraphTxt::ComputeBidiRuns(std::vector<BidiRun>& result) {
     return true;
 }
 
-void ParagraphTxt::ComputeStruct(StrutMetrics* strut, minikin::MinikinFont* /*font*/) {
+void ParagraphTxt::ComputeStrut(StrutMetrics* strut, minikin::MinikinFont* font /*font*/) {
     strut->ascent = 0;
     strut->descent = 0;
     strut->leading = 0;
@@ -842,7 +842,25 @@ void ParagraphTxt::ComputeStruct(StrutMetrics* strut, minikin::MinikinFont* /*fo
         std::string family_name = faked_font.font->GetFamilyName();
         // TODO make a font adapter
 
+        minikin::MinikinFont::FontMetrics metrics;
+        faked_font.font->GetMetrics(std::addressof(metrics),
+                                    static_cast<float>(paragraph_style_.strut_font_size));
+
         if (paragraph_style_.strut_has_height_override) {
+            double metrics_height = -metrics.ascent + metrics.descent;
+            strut->ascent = (-metrics.ascent / metrics_height) * paragraph_style_.strut_height *
+                    paragraph_style_.strut_font_size;
+            strut->descent = (metrics.descent / metrics_height) * paragraph_style_.strut_height *
+                    paragraph_style_.strut_font_size;
+            strut->leading = paragraph_style_.strut_leading < 0
+                    ? 0
+                    : (paragraph_style_.strut_leading * paragraph_style_.strut_font_size);
+        } else {
+            strut->ascent = -metrics.ascent;
+            strut->descent = metrics.descent;
+            strut->leading = paragraph_style_.strut_leading < 0
+                    ? metrics.leading
+                    : (paragraph_style_.strut_leading * paragraph_style_.strut_font_size);
         }
 
         strut->half_leading = strut->leading / 2.0;

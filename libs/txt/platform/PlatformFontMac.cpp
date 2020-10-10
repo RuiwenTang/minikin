@@ -598,6 +598,31 @@ public:
         return false;
     }
 
+    std::string GetFamilyName() override {
+        CFStringRef cf_string = CTFontCopyFamilyName(ct_font_);
+        char buffer[50] = {0};
+        CFStringGetCString(cf_string, buffer, 50, kCFStringEncodingUTF8);
+        std::string family_name = buffer;
+        CFRelease(cf_string);
+        return family_name;
+    }
+
+    void GetMetrics(FontMetrics* metrics, float size) override {
+        CTFontRef font = ct_font_;
+        if (size == CTFontGetSize(ct_font_)) {
+            CFRetain(font);
+        } else {
+            auto desc = create_descriptor(typeface_->GetFamilyName(), typeface_->GetStyle());
+            font = CTFontCreateCopyWithAttributes(ct_font_, size, nullptr, desc);
+            CFRelease(desc);
+        }
+
+        metrics->ascent = CTFontGetAscent(font);
+        metrics->descent = CTFontGetDescent(font);
+        metrics->leading = CTFontGetLeading(font);
+        CFRelease(font);
+    }
+
 private:
     CTFontRef ct_font_{};
 };

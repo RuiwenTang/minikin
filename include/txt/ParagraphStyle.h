@@ -6,6 +6,7 @@
 #define MINIKIN_INCLUDE_TXT_PARAGRAPHSTYLE_H_
 
 #include <minikin/LineBreaker.h>
+#include <minikin/MinikinFont.h>
 
 #include <climits>
 #include <limits>
@@ -93,6 +94,10 @@ class RunMetrics {
 public:
     explicit RunMetrics(const TextStyle* text_style) : text_style(text_style) {}
     const TextStyle* text_style;
+    // Ascent
+    // Descent
+    // Leading
+    minikin::MinikinFont::FontMetrics font_metrics;
 };
 
 class LineMetrics {

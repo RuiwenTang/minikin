@@ -15,6 +15,8 @@ int main(int argc, const char** argv) {
     style.font_families.emplace_back("Roboto");
 
     txt::ParagraphStyle paragraph_style;
+    paragraph_style.strut_enabled = true;
+    paragraph_style.force_strut_height = true;
 
     auto builder = txt::ParagraphBuilder::CreateTxtBuilder(paragraph_style);
     builder->PushStyle(style);
@@ -36,6 +38,9 @@ int main(int argc, const char** argv) {
         std::cout << "line content : "
                   << unicode_string.tempSubString(line.start_index, line.end_index - line.start_index).toUTF8String(s)
                   << std::endl;
+        std::cout << "line.line_number = " << line.line_number << std::endl;
+        std::cout << "line.left = " << line.left << std::endl;
+        std::cout << "line.height = " << line.height << std::endl;
     }
 
     std::cout << "max_width = " << max_width << std::endl;

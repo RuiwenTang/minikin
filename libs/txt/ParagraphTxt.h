@@ -257,7 +257,7 @@ private:
     // TODO implement
     // Calculates and populates strut based on paragraph_style_ strut info.
     // void ComputeStrut(StrutMetrics* strut, SkFont& font);
-    void ComputeStruct(StrutMetrics* strut, minikin::MinikinFont* font);
+    void ComputeStrut(StrutMetrics* strut, minikin::MinikinFont* font);
 
     // Adjusts the ascent and descent based on the existence and type of
     // placeholder. This method sets the proper metrics to achieve the different
