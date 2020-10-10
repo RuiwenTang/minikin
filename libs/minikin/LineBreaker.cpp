@@ -236,7 +236,7 @@ float LineBreaker::addStyleRun(MinikinPaint *paint, const FontCollection *typefa
 // needed (ie when word exceeds current line width)
 void LineBreaker::addWordBreak(size_t offset, ParaWidth preBreak, ParaWidth postBreak,
                                float penalty, uint8_t hyph) {
-    Candidate cand;
+    Candidate cand{};
     ParaWidth width = mCandidates.back().preBreak;
     if (postBreak - width > currentLineWidth()) {
         // Add desperate breaks.

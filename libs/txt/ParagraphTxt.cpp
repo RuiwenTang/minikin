@@ -425,63 +425,80 @@ void ParagraphTxt::Layout(double width) {
                 std::vector<GlyphPosition> glyph_positions;
 
                 GetGlyphTypeface(layout, glyph_blob.start);
+            } // for each in glyph_blobs
+
+            // Do not increase x offset for LTR trailing ghost runs as it should not
+            // impact the layout of visible glyphs. RTL tailing ghost runs have the
+            // advance subtracted, so we do add the advance here to reset the
+            // run_x_offset. We do keep the record though so GetRectsForRange() can
+            // find metrics for trailing spaces.
+            if ((!run.IsGhost() || run.IsRTL()) && !run.IsPlaceholderRun()) {
+                run_x_offset += layout.getAdvance();
+            }
+        } // for each in line runs
+
+        // Adjust the glyph positions based on the alignment of the line.
+        double line_x_offset = GetLineXOffset(run_x_offset, justify_line);
+        if (line_x_offset) {
+            for (CodeUnitRun& code_unit_run : line_code_unit_runs) {
+                code_unit_run.Shift(line_x_offset);
             }
 
-            // Adjust the glyph positions based on the alignment of the line.
-            double line_x_offset = GetLineXOffset(run_x_offset, justify_line);
-            if (line_x_offset) {
-                for (CodeUnitRun& code_unit_run : line_code_unit_runs) {
-                    code_unit_run.Shift(line_x_offset);
-                }
+            for (CodeUnitRun& code_unit_run : line_inline_placeholder_code_unit_runs) {
+                code_unit_run.Shift(line_x_offset);
             }
 
-            size_t next_line_start = (line_number < line_metrics_.size() - 1)
-                    ? line_metrics_[line_number + 1].start_index
-                    : text_.size();
-            glyph_lines_.emplace_back(std::move(line_glyph_positions),
-                                      next_line_start - line_metrics.start_index);
-            code_unit_runs_.insert(code_unit_runs_.end(), line_code_unit_runs.begin(),
-                                   line_code_unit_runs.end());
-            inline_placeholder_code_unit_runs_
-                    .insert(inline_placeholder_code_unit_runs_.end(),
-                            line_inline_placeholder_code_unit_runs.begin(),
-                            line_inline_placeholder_code_unit_runs.end());
-
-            // Calculate the amount to advance in the y direction. This is done by
-            // computing the maximum ascent and descent with respect to the strut.
-            double max_ascent = strut_.ascent + strut_.half_leading;
-            double max_descent = strut_.descent + strut_.half_leading;
-            double max_unscaled_ascent = 0;
-
-            // TODO UpdateLineMetrics
-
-            // If no fonts were actually rendered, then compute a baseline based on the font of
-            // paragraph style
-            // TODO implement
-
-            // Calcluate the baselines. This is only done on the first line.
-            if (line_number == 0) {
-                alphabetic_baseline_ = max_ascent;
-
-                ideographic_baseline_ = (max_ascent + max_descent);
+            for (GlyphPosition& position : line_glyph_positions) {
+                position.Shift(line_x_offset);
             }
-
-            line_metrics.height = (line_number == 0 ? 0
-                                                    : line_metrics_[line_number - 1].height +
-                                                   std::round(max_ascent + max_descent));
-
-            y_offset += std::round(max_ascent + prev_max_descent);
-            prev_max_descent = max_descent;
-
-            line_metrics.line_number = line_number;
-            line_metrics.ascent = max_ascent;
-            line_metrics.descent = max_descent;
-            line_metrics.unscaled_ascent = max_unscaled_ascent;
-            line_metrics.width = line_widths_[line_number];
-            line_metrics.left = line_x_offset;
-
-            final_line_count_++;
         }
+
+        size_t next_line_start = (line_number < line_metrics_.size() - 1)
+                ? line_metrics_[line_number + 1].start_index
+                : text_.size();
+        glyph_lines_.emplace_back(std::move(line_glyph_positions),
+                                  next_line_start - line_metrics.start_index);
+        code_unit_runs_.insert(code_unit_runs_.end(), line_code_unit_runs.begin(),
+                               line_code_unit_runs.end());
+        inline_placeholder_code_unit_runs_.insert(inline_placeholder_code_unit_runs_.end(),
+                                                  line_inline_placeholder_code_unit_runs.begin(),
+                                                  line_inline_placeholder_code_unit_runs.end());
+
+        // Calculate the amount to advance in the y direction. This is done by
+        // computing the maximum ascent and descent with respect to the strut.
+        double max_ascent = strut_.ascent + strut_.half_leading;
+        double max_descent = strut_.descent + strut_.half_leading;
+        double max_unscaled_ascent = 0;
+
+        // TODO UpdateLineMetrics
+
+        // If no fonts were actually rendered, then compute a baseline based on the font of
+        // paragraph style
+        // TODO implement
+
+        // Calcluate the baselines. This is only done on the first line.
+        if (line_number == 0) {
+            alphabetic_baseline_ = max_ascent;
+
+            ideographic_baseline_ = (max_ascent + max_descent);
+        }
+
+        line_metrics.height = (line_number == 0 ? 0
+                                                : line_metrics_[line_number - 1].height +
+                                               std::round(max_ascent + max_descent));
+
+        y_offset += std::round(max_ascent + prev_max_descent);
+        prev_max_descent = max_descent;
+
+        line_metrics.line_number = line_number;
+        line_metrics.ascent = max_ascent;
+        line_metrics.descent = max_descent;
+        line_metrics.unscaled_ascent = max_unscaled_ascent;
+        line_metrics.width = line_widths_[line_number];
+        line_metrics.left = line_x_offset;
+
+        final_line_count_++;
+
     } // for each line_number
 
     if (paragraph_style_.max_lines == 1 ||
