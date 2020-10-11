@@ -144,7 +144,7 @@ set(UNICODE_DATA ${CMAKE_CURRENT_BINARY_DIR}/generated/UnicodeData.h)
 
 file(WRITE ${UNICODE_DATA})
 add_custom_target(unicode_data
-        COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/libs/minikin/unicode_emoji_h_gen.py
+        COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/libs/minikin/unicode_emoji_h_gen.py
         "--input" ${CMAKE_CURRENT_SOURCE_DIR}/libs/minikin/emoji-data.txt "--output" ${UNICODE_DATA}
         )
 
