@@ -132,10 +132,12 @@ set(UTILS_HEADERS
         include/utils/JenkinsHash.h
         include/utils/LruCache.h
         include/utils/TypeHelpers.h
+        include/utils/UTF.h
         )
 
 set(UTILS_SOURCES
         libs/utils/JenkinsHash.cpp
+        libs/utils/UTF.cpp
         )
 
 set(UNICODE_DATA ${CMAKE_CURRENT_BINARY_DIR}/generated/UnicodeData.h)

@@ -18,3 +18,6 @@ endif ()
 
 add_executable(paragraph_example paragraph_example.cpp)
 target_link_libraries(paragraph_example minikin)
+
+add_executable(utf_util_example utf_util_example.cpp)
+target_link_libraries(utf_util_example minikin)
