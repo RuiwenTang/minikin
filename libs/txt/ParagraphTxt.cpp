@@ -669,6 +669,7 @@ void ParagraphTxt::Layout(double width) {
                                                 : line_metrics_[line_number - 1].height +
                                                std::round(max_ascent + max_descent));
 
+        line_metrics.baseline = line_metrics.height - max_descent;
         y_offset += std::round(max_ascent + prev_max_descent);
         prev_max_descent = max_descent;
 

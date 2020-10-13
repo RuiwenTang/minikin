@@ -19,6 +19,7 @@
 #include <minikin/WordBreaker.h>
 #include <unicode/uchar.h>
 #include <unicode/utf16.h>
+#include <utils/UTF.h>
 
 #include "MinikinInternal.h"
 

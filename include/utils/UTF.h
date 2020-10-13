@@ -32,7 +32,7 @@ public:
 
     /**
      * .Given a sequence of aligned UTF-8 characters in machine-endian form, return the first
-     * unidoce codepoint.
+     * unicode codepoint.
      *
      * \param ptr
      * \param end

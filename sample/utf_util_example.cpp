@@ -2,15 +2,15 @@
 // Created by TangRuiwen on 2020/10/11.
 //
 
+#include <CoreText/CoreText.h>
 #include <utils/UTF.h>
 
 #include <iostream>
 #include <string>
 
 int main(int argc, const char** argv) {
-    char text[] = 
-    // "fine world \xe4\xb8\xad";
-    "fine world \xe0\xa4\xa8\xe0\xa4\xae\xe0\xa4\xb8\xe0\xa5\x8d\xe0\xa4\xa4\xe0\xa5\x87";
+    char text[] =
+            "fine world \xe0\xa4\xa8\xe0\xa4\xae\xe0\xa4\xb8\xe0\xa5\x8d\xe0\xa4\xa4\xe0\xa5\x87";
 
     int count = txt::UTF::CountUTF8(text, sizeof(text));
     std::cout << "raw text = " << text << std::endl;

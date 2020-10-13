@@ -17,12 +17,12 @@ int main(int argc, const char** argv) {
     txt::ParagraphStyle paragraph_style;
     paragraph_style.strut_enabled = true;
     paragraph_style.force_strut_height = true;
-//    paragraph_style.text_align = txt::TextAlign::kJustify;
+    //    paragraph_style.text_align = txt::TextAlign::kJustify;
 
     auto builder = txt::ParagraphBuilder::CreateTxtBuilder(paragraph_style);
     builder->PushStyle(style);
     std::string raw_string =
-//            "fine world 中文换行";
+            //            "fine world 中文换行";
             "fine world \xe0\xa4\xa8\xe0\xa4\xae\xe0\xa4\xb8\xe0\xa5\x8d\xe0\xa4\xa4\xe0\xa5\x87";
     icu::UnicodeString unicode_string(raw_string.c_str());
     builder->AddText(std::u16string{unicode_string.getBuffer()});
@@ -37,15 +37,28 @@ int main(int argc, const char** argv) {
     for (auto& line : line_metrics) {
         std::string s;
         std::cout << "line content : "
-                  << unicode_string.tempSubString(line.start_index, line.end_index - line.start_index).toUTF8String(s)
+                  << unicode_string
+                             .tempSubString(line.start_index, line.end_index - line.start_index)
+                             .toUTF8String(s)
                   << std::endl;
         std::cout << "line.line_number = " << line.line_number << std::endl;
+        std::cout << "line.start_index = " << line.start_index << std::endl;
+        std::cout << "line.end_index = " << line.end_index << std::endl;
         std::cout << "line.left = " << line.left << std::endl;
         std::cout << "line.height = " << line.height << std::endl;
+        std::cout << "line.baseline = " << line.baseline << std::endl;
     }
 
     std::cout << "max_width = " << max_width << std::endl;
     std::cout << "GetMinIntrinsicWidth = " << paragraph->GetMinIntrinsicWidth() << std::endl;
     std::cout << "GetMaxIntrinsicWidth = " << paragraph->GetMaxIntrinsicWidth() << std::endl;
+    auto text_boxes = paragraph->GetRectsForRange(0, unicode_string.length(),
+                                                  txt::Paragraph::RectHeightStyle::kMax,
+                                                  txt::Paragraph::RectWidthStyle::kMax);
+
+    for (auto& text_box : text_boxes) {
+        std::cout << "rect = {" << text_box.rect.mLeft << ", " << text_box.rect.mTop << ", "
+                  << text_box.rect.mRight << ", " << text_box.rect.mBottom << "}" << std::endl;
+    }
     return 0;
 }
